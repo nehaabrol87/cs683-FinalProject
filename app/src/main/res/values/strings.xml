@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Parkingpursuit</string>
+
+    <string name="hello_world">Welcome to ParkingPursuit.com</string>
+    <string name="action_settings">Settings</string>
+    <string name="str_atv_places">Enter Place Here</string>
+</resources>
