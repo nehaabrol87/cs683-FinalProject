@@ -10,10 +10,11 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import org.json.JSONObject;
-
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -22,27 +23,78 @@ import android.util.Log;
 import android.view.Menu;
 import android.widget.AutoCompleteTextView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 
-public class MainActivity extends Activity {
+//Maps
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.MapFragment;
+import android.support.v4.content.ContextCompat;
+import android.location.Criteria;
+import android.location.Location;
+import android.content.Context;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.widget.Toast;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.ConnectionResult;
+import android.location.Geocoder;
+import android.location.Address;
 
-    AutoCompleteTextView location;
-    PlacesTask placesTask;
-    ParserTask parserTask;
+public class MainActivity extends Activity implements LocationListener {
+
+    private AutoCompleteTextView destination;
+    private PlacesTask placesTask;
+    private ParserTask parserTask;
+    private GoogleMap mMap;
+    private  Location location;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!isGooglePlayServicesAvailable()) {
+            finish();
+        }
         setContentView(R.layout.activity_home_page);
 
-        location = (AutoCompleteTextView) findViewById(R.id.destination);
-        location.setThreshold(1);
+        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mMap = mapFragment.getMap();
+        mMap.setMyLocationEnabled(true);
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        location.addTextChangedListener(new TextWatcher() {
+        //Check permissions (Required for API>23
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
+
+        }
+
+        Criteria criteria = new Criteria();
+        // Getting the name of the provider that meets the criteria
+        String provider = locationManager.getBestProvider(criteria, false);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0, this);
+
+        if(provider!=null && !provider.equals("")){
+            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+            if(location!=null)
+                onLocationChanged(location);
+            else
+                Toast.makeText(getBaseContext(), "Location can't be retrieved", Toast.LENGTH_SHORT).show();
+
+        }else{
+            Toast.makeText(getBaseContext(), "No Provider Found", Toast.LENGTH_SHORT).show();
+        }
+
+        destination = (AutoCompleteTextView) findViewById(R.id.destination);
+        destination.setThreshold(1);
+        System.out.println(destination + "location");
+        destination.addTextChangedListener(new TextWatcher() {
 
             @Override
             public void onTextChanged(CharSequence s,int start, int before, int count) {
                 placesTask = new PlacesTask();
-                placesTask.execute(location.getText().toString().toString());
+                placesTask.execute(destination.getText().toString());
             }
 
             @Override
@@ -58,6 +110,51 @@ public class MainActivity extends Activity {
         });
     }
 
+        @Override
+        public void onLocationChanged(Location location)  {
+
+            Context context = this;
+            String address = " ";
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            LatLng latLng = new LatLng(latitude, longitude);
+            if(Geocoder.isPresent()){
+                Geocoder gcd = new Geocoder(context , Locale.getDefault());
+                try {
+                    List<Address> addresses = gcd.getFromLocation(latitude, longitude, 1);
+                    address = addresses.get(0).getAddressLine(0);
+                } catch (IOException e) { e.printStackTrace(); }
+            }
+            mMap.addMarker(new MarkerOptions().position(latLng).title("Current Location:" + address));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+            // TODO Auto-generated method stub
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+            // TODO Auto-generated method stub
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            // TODO Auto-generated method stub
+        }
+
+    private boolean isGooglePlayServicesAvailable() {
+        int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        if (ConnectionResult.SUCCESS == status) {
+            return true;
+        } else {
+            GooglePlayServicesUtil.getErrorDialog(status, this, 0).show();
+            return false;
+        }
+    }
+
     /** A method to download json data from url */
     private String downloadUrl(String strUrl) throws IOException{
         String data = "";
@@ -65,29 +162,17 @@ public class MainActivity extends Activity {
         HttpURLConnection urlConnection = null;
         try{
             URL url = new URL(strUrl);
-
-            // Creating an http connection to communicate with url
             urlConnection = (HttpURLConnection) url.openConnection();
-
-            // Connecting to url
             urlConnection.connect();
-
-            // Reading data from url
             iStream = urlConnection.getInputStream();
-
             BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
-
             StringBuffer sb  = new StringBuffer();
-
             String line = "";
             while( ( line = br.readLine())  != null){
                 sb.append(line);
             }
-
             data = sb.toString();
-
             br.close();
-
         }catch(Exception e){
             //Log.d("Exception while downloading url", e.toString());
         }finally{
@@ -98,33 +183,27 @@ public class MainActivity extends Activity {
     }
     // Fetches all places from GooglePlaces AutoComplete Web Service
     private class PlacesTask extends AsyncTask<String, Void, String>{
-
         @Override
         protected String doInBackground(String... place) {
-            // For storing data from web service
             String data = "";
             // Obtain browser key from https://code.google.com/apis/console
-            String key = "key=AIzaSyAe6tms4HnUgSK7KxwzTNtw81I71UwcwNU";
+            String key = "key=AIzaSyABnXKSGwNY4LhUExDF48esvU4n9z_Cypc";
             String input="";
             try {
                 input = "input=" + URLEncoder.encode(place[0], "utf-8");
             } catch (UnsupportedEncodingException e1) {
                 e1.printStackTrace();
             }
-            // place type to be searched
             String types = "types=geocode";
-            // Sensor enabled
             String sensor = "sensor=false";
-            // Building the parameters to the web service
             String parameters = input+"&"+types+"&"+sensor+"&"+key;
-            // Output format
             String output = "json";
-            // Building the url to the web service
             String url = "https://maps.googleapis.com/maps/api/place/autocomplete/"+output+"?"+parameters;
 
             try{
                 // Fetching the data from web service in background
                 data = downloadUrl(url);
+                System.out.println(data);
             }catch(Exception e){
                 Log.d("Background Task",e.toString());
             }
@@ -165,10 +244,8 @@ public class MainActivity extends Activity {
 
             String[] from = new String[] { "description"};
             int[] to = new int[] { android.R.id.text1 };
-
             SimpleAdapter adapter = new SimpleAdapter(getBaseContext(), result, android.R.layout.simple_list_item_1, from, to);
-
-            location.setAdapter(adapter);
+            destination.setAdapter(adapter);
         }
     }
 
