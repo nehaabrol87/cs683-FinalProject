@@ -32,7 +32,7 @@ public class MainActivity extends Activity  {
         setContentView(R.layout.activity_home_page);
 
         //Call google Maps API
-        MapFragment mapFragment = (MapFragment)getFragmentManager().findFragmentById(R.id.map);
+        final MapFragment mapFragment = (MapFragment)getFragmentManager().findFragmentById(R.id.map);
         new MapsActivity(getBaseContext(),mapFragment);
 
         //Call google places autocomplete API
@@ -76,7 +76,7 @@ public class MainActivity extends Activity  {
                 String value = ((TextView)view).getText().toString();
 
                 try {
-                  updatedValue = URLEncoder.encode(value,"UTF-8");
+                    updatedValue = URLEncoder.encode(value,"UTF-8");
                 } catch (UnsupportedEncodingException ex) {
                     ex.printStackTrace();
                 }
@@ -84,7 +84,7 @@ public class MainActivity extends Activity  {
                 String urlString = "http://api.parkwhiz.com/search?destination="+updatedValue+"&key=296ce162e9bb823e5c66bd85280aa208&start="+epoch_start+"&end="+epoch_end+"&sort="+sorting+"&restroom="+0+"&security="+0+"&valet="+0+"&indoor="+0+"&eticket="+0+"&attended="+0;
 
                 //String urlString= "http://api.parkwhiz.com/search?destination="+updatedValue+"&key=296ce162e9bb823e5c66bd85280aa208&start="+epoch_start+"&end="+epoch_end;
-                GetAPIResults apiResults = new GetAPIResults(getBaseContext());
+                GetAPIResults apiResults = new GetAPIResults(getBaseContext(),mapFragment);
                 apiResults.execute(urlString);
             }
         });
@@ -99,4 +99,4 @@ public class MainActivity extends Activity  {
             return false;
         }
     }
-  }
+}

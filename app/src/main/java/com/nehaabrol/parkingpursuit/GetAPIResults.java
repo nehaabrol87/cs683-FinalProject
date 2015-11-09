@@ -10,15 +10,24 @@ import java.net.URL;
 import android.content.Context;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.MapFragment;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+
 /**
  * Created by neha_.abrol on 11/7/15.
  */
 public class GetAPIResults extends  AsyncTask<String, Void, String>  {
 
     private Context context;
+    private MapFragment mapFragment;
 
-    public GetAPIResults(Context context) {
+    public GetAPIResults(Context context,MapFragment mapfragment) {
         this.context = context;
+        this.mapFragment = mapfragment;
     }
 
     public static String GET(String urlString){
@@ -52,6 +61,22 @@ public class GetAPIResults extends  AsyncTask<String, Void, String>  {
     @Override
     protected void onPostExecute(String result) {
         Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show();
-        System.out.println(result);
+        JSONObject json = null;
+        JSONArray parking_listings = null;
+        double lat = 0;
+        double lng = 0;
+
+        try {
+            json = new JSONObject(result);
+            parking_listings = json.getJSONArray("parking_listings");
+            lat = json.getDouble("lat");
+            lng = json.getDouble("lng");
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        MapsActivity maps = new MapsActivity(context,mapFragment);
+        maps.addMapsOnMarker(parking_listings, lat, lng);
     }
   }

@@ -20,13 +20,4 @@ public class CustomAutoCompleteTextView extends AutoCompleteTextView {
         HashMap<String, String> hm = (HashMap<String, String>) selectedItem;
         return hm.get("description");
     }
-
-    @Override
-    protected void onSelectionChanged(int selStart, int selEnd) {
-
-//        String urlString = "http://api.parkwhiz.com/search/?destination=312+N+wacker+Dr,+Chicago&start=1446942628&end=1446953428&key=62d882d8cfe5680004fa849286b6ce20";
-//        GetAPIResults apiResults = new GetAPIResults(context);
-//        apiResults.execute(urlString);
-    }
-
 }
