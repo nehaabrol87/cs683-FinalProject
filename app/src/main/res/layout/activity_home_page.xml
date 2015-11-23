@@ -10,49 +10,64 @@
     android:id="@+id/app">
 
     <RelativeLayout
-    android:id="@+id/header"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_alignParentTop="true"
-    android:background="#0000ff"
-    android:gravity="center" >
-
-    <TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    android:text="Welcome to parking Pursuit"
-    android:textSize="25sp"
-        android:textColor="#fff"/>
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="#33B5E5"
+        android:gravity="center" >
+            <TextView
+                android:layout_width="wrap_content"
+                android:textColor="#fff"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:text="Welcome to parking Pursuit"
+                android:textSize="25sp" />
+    </RelativeLayout>
+    <RelativeLayout
+        android:id="@+id/datetimepicker"
+        android:layout_below="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <include
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fillViewport="true"
+            layout="@layout/date_time_picker" />
     </RelativeLayout>
 
-    <com.nehaabrol.parkingpursuit.CustomAutoCompleteTextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="25dp"
-        android:inputType="textMultiLine"
-        android:ems="10"
-        android:id="@+id/destination"
-        android:layout_below="@+id/header"
-        android:layout_centerHorizontal="true"
-        android:hint="@string/str_atv_places" />
+    <RelativeLayout
+        android:id="@+id/content"
+        android:layout_below="@+id/datetimepicker"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <AutoCompleteTextView
+            android:id="@+id/destination"
+            android:layout_margin="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="Please enter your destination" >
+            <requestFocus />
+        </AutoCompleteTextView>
 
         <fragment
             android:id="@+id/map"
-            android:layout_above="@+id/footer"
             android:layout_below="@+id/destination"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
             class="com.google.android.gms.maps.MapFragment"
-            tools:layout="@layout/list_item" />
+            tools:layout="@layout/list_item">
+        </fragment>
+    </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/footer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="#0000ff"
+        android:background="#33B5E5"
         android:gravity="center" >
         <TextView
             android:layout_width="wrap_content"
@@ -62,4 +77,10 @@
             android:textColor="#fff"
             android:textSize="25sp" />
     </RelativeLayout>
+    <include
+        android:layout_width="match_parent"
+        android:id="@+id/hidden_panel"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        layout="@layout/parking_listing_details" />
 </RelativeLayout>

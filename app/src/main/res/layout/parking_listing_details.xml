@@ -1,0 +1,409 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:visibility="gone">
+
+    <RelativeLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="#33B5E5"
+        android:gravity="left" >
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Back"
+            android:layout_centerInParent="true"
+            android:onClick="slideUpDown" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/topPanel"
+        android:layout_below="@+id/header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <RelativeLayout
+            android:id = "@+id/topLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp">
+            <ImageView
+                android:id="@+id/streetview"
+                android:layout_width="200dp"
+                android:layout_height="200dp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id = "@+id/topRight"
+            android:layout_toRightOf="@+id/topLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp">
+            <TextView
+                android:id="@+id/locationName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:textColor="#33B5E5"
+                android:textSize="25sp"
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/price"
+                android:layout_below="@+id/locationName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:textColor="#33B5E5"
+                android:textSize="20sp" />
+            <TextView
+                android:id="@+id/address"
+                android:layout_below="@+id/price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:textColor="#000000"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/spots"
+                android:layout_below="@+id/address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:textColor="#000000"
+                android:textSize="20sp" />
+            <TextView
+                android:id="@+id/likes_text"
+                android:layout_below="@+id/spots"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:textColor="#FF0000"
+                android:textSize="20sp" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+    android:id="@+id/panel1"
+    android:layout_below="@+id/topPanel"
+    android:layout_marginTop="10dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center" >
+        <RelativeLayout
+            android:id="@+id/header1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:background="#A8A8A8">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#fff"
+                android:layout_margin="5dp"
+                android:text="About This Garage"
+                android:textStyle="bold"
+                android:textSize="25sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/text1"
+            android:layout_below="@+id/header1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/panel2"
+        android:layout_below="@+id/panel1"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+            <RelativeLayout
+            android:id="@+id/header2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#A8A8A8"
+            android:gravity="center" >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#fff"
+                android:layout_margin="5dp"
+                android:text="Amenities"
+                android:textStyle="bold"
+                android:textSize="25sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/text2a"
+            android:layout_below="@+id/header2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="left">
+                <ImageView
+                    android:id="@+id/security_image"
+                    android:layout_toLeftOf="@+id/security_text"
+                    android:layout_width="30dp"
+                    android:src="@drawable/lock"
+                    android:layout_height="30dp" />
+                <TextView
+                    android:id="@+id/security_text"
+                    android:layout_toLeftOf="@+id/security_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000000"
+                    android:text="Security"
+                    android:textStyle="bold"
+                    android:layout_margin="5dp"
+                    android:textSize="15sp" />
+                <TextView
+                    android:id="@+id/security_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000000"
+                    android:layout_margin="5dp"
+                    android:textStyle="bold"
+                    android:textSize="15sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/text2b"
+            android:layout_below="@+id/text2a"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:gravity="left">
+            <ImageView
+                android:id="@+id/valet_image"
+                android:layout_toLeftOf="@+id/valet_text"
+                android:layout_width="30dp"
+                android:src="@drawable/valet"
+                android:layout_height="30dp" />
+            <TextView
+                android:id="@+id/valet_text"
+                android:layout_toLeftOf="@+id/valet_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:text="Valet"
+                android:textStyle="bold"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/valet_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textStyle="bold"
+                android:textSize="15sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/text2c"
+            android:layout_below="@+id/text2b"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:gravity="left">
+            <ImageView
+                android:id="@+id/attended_image"
+                android:layout_toLeftOf="@+id/attended_text"
+                android:layout_width="30dp"
+                android:src="@drawable/attendent"
+                android:layout_height="30dp" />
+            <TextView
+                android:id="@+id/attended_text"
+                android:layout_toLeftOf="@+id/attended_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:text="Attended"
+                android:textStyle="bold"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/attended_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textStyle="bold"
+                android:textSize="15sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/text2d"
+            android:layout_below="@+id/text2c"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:gravity="left">
+            <ImageView
+                android:id="@+id/mobilepass_image"
+                android:layout_toLeftOf="@+id/mobilepass_text"
+                android:layout_width="30dp"
+                android:src="@drawable/mobile"
+                android:layout_height="30dp" />
+            <TextView
+                android:id="@+id/mobilepass_text"
+                android:layout_toLeftOf="@+id/mobilepass_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:text="Mobile Pass"
+                android:textStyle="bold"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/mobilepass_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textStyle="bold"
+                android:textSize="15sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/text2e"
+            android:layout_below="@+id/text2d"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:gravity="left">
+            <ImageView
+                android:id="@+id/restrooms_image"
+                android:layout_toLeftOf="@+id/restrooms_text"
+                android:layout_width="30dp"
+                android:src="@drawable/restroom"
+                android:layout_height="30dp" />
+            <TextView
+                android:id="@+id/restrooms_text"
+                android:layout_toLeftOf="@+id/restrooms_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:text="Restrooms"
+                android:textStyle="bold"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/restrooms_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textStyle="bold"
+                android:textSize="15sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/text2f"
+            android:layout_below="@+id/text2e"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:gravity="left">
+            <ImageView
+                android:id="@+id/covered_image"
+                android:layout_toLeftOf="@+id/covered_text"
+                android:layout_width="30dp"
+                android:src="@drawable/covered"
+                android:layout_height="30dp" />
+            <TextView
+                android:id="@+id/covered_text"
+                android:layout_toLeftOf="@+id/covered_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:text="Covered"
+                android:textStyle="bold"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/covered_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textStyle="bold"
+                android:textSize="15sp" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/panel3"
+        android:layout_below="@+id/panel2"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <RelativeLayout
+            android:id="@+id/header3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#A8A8A8"
+            android:gravity="center" >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#fff"
+                android:layout_margin="5dp"
+                android:text="Directions Summary"
+                android:textStyle="bold"
+                android:textSize="25sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/text3"
+            android:layout_below="@+id/header3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/directions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/panel4"
+        android:layout_below="@+id/panel3"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <RelativeLayout
+            android:id="@+id/header4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#A8A8A8"
+            android:gravity="center" >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#fff"
+                android:layout_margin="5dp"
+                android:text="Type of Garage "
+                android:textStyle="bold"
+                android:textSize="25sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/text4"
+            android:layout_below="@+id/header4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+        </RelativeLayout>
+    </RelativeLayout>
+</RelativeLayout>

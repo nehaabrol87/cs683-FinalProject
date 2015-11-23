@@ -1,5 +1,6 @@
 package com.nehaabrol.parkingpursuit;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -10,12 +11,18 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Marker;
+import org.json.JSONObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,6 +30,12 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import android.os.AsyncTask;
+import android.widget.TextView;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -33,22 +46,28 @@ import android.graphics.Paint.Align;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
-import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import android.widget.ImageView;
+import android.util.Log;
+import com.google.android.gms.maps.MapFragment;
 
 
 /**
  * Created by neha_.abrol on 11/7/15.
  */
-public class MapsActivity implements LocationListener {
+public class MapsActivity implements LocationListener,OnMarkerClickListener {
 
     private static GoogleMap  mMap;
     private Location location;
     private Context context;
-    private MapFragment mapFragment;
-    private  LocationManager locationManager;
+    private View hiddenPanel;
+    private LocationManager locationManager;
+    private Activity activity;
+    private HashMap<String, JSONObject> markerInfoList = new HashMap<String, JSONObject>();
 
-    public MapsActivity(Context context,MapFragment mapFragment) {
+    public MapsActivity(Context context,MapFragment mapFragment,Activity activity) {
         this.context = context;
+        this.activity = activity;
 
         mMap = mapFragment.getMap();
         mMap.setMyLocationEnabled(true);
@@ -78,21 +97,22 @@ public class MapsActivity implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location)  {
-        String address = " ";
-        double latitude = location.getLatitude();
-        double longitude = location.getLongitude();
-        LatLng latLng = new LatLng(latitude, longitude);
-        if(Geocoder.isPresent()){
-            Geocoder gcd = new Geocoder(context , Locale.getDefault());
-            try {
-                List<Address> addresses = gcd.getFromLocation(latitude, longitude, 1);
-                address = addresses.get(0).getAddressLine(0);
-            } catch (IOException e) { e.printStackTrace(); }
-        }
-        mMap.addMarker(new MarkerOptions()
-                .position(latLng).title("Current Location:" + address));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+//        System.out.println("On location changed" + location);
+//        String address = " ";
+//        double latitude = location.getLatitude();
+//        double longitude = location.getLongitude();
+//        LatLng latLng = new LatLng(latitude, longitude);
+//        if(Geocoder.isPresent()){
+//            Geocoder gcd = new Geocoder(context , Locale.getDefault());
+//            try {
+//                List<Address> addresses = gcd.getFromLocation(latitude, longitude, 1);
+//                address = addresses.get(0).getAddressLine(0);
+//            } catch (IOException e) { e.printStackTrace(); }
+//        }
+//        mMap.addMarker(new MarkerOptions()
+//                .position(latLng).title("Current Location:" + address));
+//        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+//        mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
     }
 
     @Override
@@ -112,35 +132,251 @@ public class MapsActivity implements LocationListener {
 
     //Method to add markers on map based on API resposne
     public  void addMapsOnMarker(JSONArray parking_listings , Double lat, Double lng) {
+        JSONObject parking_data;
         double latitude = 0;
         double longitude = 0;
-        String price = " ";
+        Integer price = 0;
+        String price_formatted = " ";
+        String location_name = " ";
+        String address = " ";
         LatLng latLng = new LatLng(lat,lng);
+        String id;
+        String city = " ";
+        String state = " ";
+        String zip = " ";
+        String api_url = " ";
+        String security = " ";
+        String valet = " ";
+        String attended = " ";
+        String covered = " ";
+        String restroom = " ";
+        String mobile_pass = " ";
+        String distance = " ";
+        String spots = " ";
+        String likes = " ";
 
-        Bitmap icon = BitmapFactory.decodeResource(context.getResources(),
-                R.drawable.my_marker_icon);
+        Bitmap icon = BitmapFactory.decodeResource(context.getResources(),R.drawable.my_marker_icon);
         icon = Bitmap.createScaledBitmap(icon, 45, 70, true);
 
-        for (int i = 0; i < parking_listings.length(); i++) {
+        System.out.println("Parking Listings " +parking_listings);
+        System.out.println("Latlng" +latLng);
 
-            try{
-                price = " ";
-                System.out.println("Listing" + parking_listings.getJSONObject(i));
+        for (int i = 0; i < parking_listings.length(); i++) {
+            parking_data = new JSONObject();
+            try {
                 latitude = parking_listings.getJSONObject(i).getDouble("lat");
-                longitude = parking_listings.getJSONObject(i).getDouble("lng");
-                price = parking_listings.getJSONObject(i).getString("price_formatted");
+                address = parking_listings.getJSONObject(i).getString("address");
+                longitude =  parking_listings.getJSONObject(i).getDouble("lng");
+                price_formatted = parking_listings.getJSONObject(i).getString("price_formatted");
+                price = (int)Math.floor(parking_listings.getJSONObject(i).getDouble("price"));
+                location_name = parking_listings.getJSONObject(i).getString("location_name");
+                city = parking_listings.getJSONObject(i).getString("city");
+                state = parking_listings.getJSONObject(i).getString("state");
+                zip = parking_listings.getJSONObject(i).getString("zip");
+                api_url = parking_listings.getJSONObject(i).getString("api_url");
+                distance = parking_listings.getJSONObject(i).getString("distance");
+                likes = parking_listings.getJSONObject(i).getString("recommendations");
+                spots = parking_listings.getJSONObject(i).getString("available_spots");
+
+                if(parking_listings.getJSONObject(i).getString("security") =="0"){
+                    security = "No";
+                } else {
+                    security = "Yes";
+                }
+
+                if(parking_listings.getJSONObject(i).getString("valet") =="0"){
+                    valet = "No";
+                } else {
+                    valet = "Yes";
+                }
+
+                if(parking_listings.getJSONObject(i).getString("attended") =="0"){
+                    attended = "No";
+                } else {
+                    attended = "Yes";
+                }
+
+                if(parking_listings.getJSONObject(i).getString("indoor") =="0"){
+                    covered = "No";
+                } else {
+                    covered = "Yes";
+                }
+
+                if(parking_listings.getJSONObject(i).getString("eticket") =="0"){
+                    mobile_pass = "No";
+                } else {
+                    mobile_pass = "Yes";
+                }
+
+                if(parking_listings.getJSONObject(i).getString("restroom") =="0"){
+                    restroom = "No";
+                } else {
+                    restroom = "Yes";
+                }
+                parking_data.put("lat",latitude);
+                parking_data.put("address", address);
+                parking_data.put("lng", longitude);
+                parking_data.put("price_formatted", price_formatted);
+                parking_data.put("price", price);
+                parking_data.put("location_name", location_name);
+                parking_data.put("city",city);
+                parking_data.put("state",state);
+                parking_data.put("zip",zip);
+                parking_data.put("api_url",api_url);
+                parking_data.put("security",security);
+                parking_data.put("valet", valet);
+                parking_data.put("attended",attended);
+                parking_data.put("covered",covered);
+                parking_data.put("mobile_pass",mobile_pass);
+                parking_data.put("restroom",restroom);
+                parking_data.put("likes","Recommendations "+likes);
+                parking_data.put("spots","No of Available Spots " + spots);
+                parking_data.put("distance",distance + " miles away");
 
             } catch (JSONException e) {
+                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            mMap.addMarker(new MarkerOptions()
-                   .position(new LatLng(latitude,longitude))
-                   .icon(BitmapDescriptorFactory.fromBitmap(writeTextOnDrawable(icon,price)))
-                   );
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+
+
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng),14.0f));
+            //mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+            id= mMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(latitude, longitude)).title("Name:" + location_name)
+                            .icon(BitmapDescriptorFactory.fromBitmap(writeTextOnDrawable(icon, "$"+price)))).getId();
+            markerInfoList.put(id, parking_data);
+            mMap.setOnMarkerClickListener(this);
         }
-      //System.out.println(parking_listings);
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        JSONObject parking_data;
+        double latitude = 0;
+        double longitude = 0;
+        String location_name = " ";
+        String address = " ";
+        String price_formatted = " ";
+        String city = " ";
+        String state = " ";
+        String zip = " ";
+        String api_url = " ";
+        String security = " ";
+        String valet = " ";
+        String attended = " ";
+        String covered = " ";
+        String restroom = " ";
+        String mobile_pass = " ";
+        String distance = " ";
+        String spots = " ";
+        String likes = " ";
+        parking_data= markerInfoList.get(marker.getId());
+        try{
+            api_url = parking_data.getString("api_url");
+            latitude = parking_data.getDouble("lat");
+            longitude = parking_data.getDouble("lng");
+            location_name = parking_data.getString("location_name");
+            price_formatted = parking_data.getString("price_formatted");
+            address  = parking_data.getString("address");
+            city  = parking_data.getString("city");
+            state  = parking_data.getString("state");
+            zip  = parking_data.getString("zip");
+            security =   parking_data.getString("security");
+            valet =   parking_data.getString("valet");
+            covered =   parking_data.getString("covered");
+            mobile_pass =   parking_data.getString("mobile_pass");
+            attended = parking_data.getString("attended");
+            restroom = parking_data.getString("restroom");
+            distance =   parking_data.getString("distance");
+            spots = parking_data.getString("spots");
+            likes = parking_data.getString("likes");
+
+            //Call to get API results
+            GetDetailAPIResults apiResults = new GetDetailAPIResults(this.context,this.activity);
+            apiResults.execute(api_url+"&key="+context.getResources().getString(R.string.park_whiz_key));
+        }
+         catch (JSONException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+        }
+
+        //Set Street View Image
+        String url= "https://maps.googleapis.com/maps/api/streetview?size=200x200&location=" + latitude + "," + longitude + "&heading=0&pitch=0&key=AIzaSyABnXKSGwNY4LhUExDF48esvU4n9z_Cypc";
+        new DownloadImageTask((ImageView) this.activity.findViewById(R.id.streetview))
+                .execute(url);
+
+        //Set Location Name
+        TextView location_name_field = (TextView) this.activity.findViewById (R.id.locationName);
+        location_name_field.setText(location_name);
+
+        //Set Price
+        TextView price_formatted_field = (TextView) this.activity.findViewById (R.id.price);
+        price_formatted_field.setText(price_formatted);
+
+        //Set address
+        TextView address_field = (TextView) this.activity.findViewById (R.id.address);
+        address_field.setText(address + " , " + city + " , " + state + " , " +zip);
+
+        //Set security
+        TextView security_field = (TextView) this.activity.findViewById (R.id.security_status);
+        security_field.setText(security);
+
+        //Set valet
+        TextView valet_field = (TextView) this.activity.findViewById (R.id.valet_status);
+        valet_field.setText(valet);
+
+        //Set attended
+        TextView attended_field = (TextView) this.activity.findViewById (R.id.attended_status);
+        attended_field .setText(attended);
+
+        //Set mobile pass
+        TextView covered_field = (TextView) this.activity.findViewById (R.id.covered_status);
+        covered_field.setText(covered);
+
+
+        //Set covered
+        TextView mobile_pass_field = (TextView) this.activity.findViewById (R.id.mobilepass_status);
+        mobile_pass_field.setText(mobile_pass);
+
+        //Set restroom
+        TextView restroom_field = (TextView) this.activity.findViewById (R.id.restrooms_status);
+        restroom_field.setText(restroom);
+
+        //Set likes
+        TextView likes_field = (TextView) this.activity.findViewById (R.id.likes_text);
+        likes_field.setText(likes);
+
+        //Set spots
+        TextView spots_field = (TextView) this.activity.findViewById (R.id.spots);
+        spots_field.setText(spots);
+
+
+        hiddenPanel = this.activity.findViewById(R.id.hidden_panel);
+        slideUpDown(hiddenPanel);
+        return  true;
+    }
+
+    public void slideUpDown(View panel) {
+        if (!isPanelShown()) {
+            // Show the panel
+            Animation bottomUp = AnimationUtils.loadAnimation(context,
+                    R.anim.bottom_up);
+
+            hiddenPanel.startAnimation(bottomUp);
+            hiddenPanel.setVisibility(View.VISIBLE);
+        }
+        else {
+            // Hide the Panel
+            Animation bottomDown = AnimationUtils.loadAnimation(context,
+                    R.anim.bottom_down);
+
+            hiddenPanel.startAnimation(bottomDown);
+            hiddenPanel.setVisibility(View.GONE);
+        }
+    }
+
+    private boolean isPanelShown() {
+        return hiddenPanel.getVisibility() == View.VISIBLE;
     }
 
     private Bitmap writeTextOnDrawable(Bitmap bm, String text) {
@@ -183,5 +419,30 @@ public class MapsActivity implements LocationListener {
     {
         final float conversionScale = context.getResources().getDisplayMetrics().density;
         return (int) ((nDP * conversionScale) + 0.5f) ;
+    }
+
+    private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
+        ImageView bmImage;
+
+        public DownloadImageTask(ImageView bmImage) {
+            this.bmImage = bmImage;
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            String urldisplay = urls[0];
+            Bitmap mIcon11 = null;
+            try {
+                InputStream in = new java.net.URL(urldisplay).openStream();
+                mIcon11 = BitmapFactory.decodeStream(in);
+            } catch (Exception e) {
+                Log.e("Error", e.getMessage());
+                e.printStackTrace();
+            }
+            return mIcon11;
+        }
+
+        protected void onPostExecute(Bitmap result) {
+            bmImage.setImageBitmap(result);
+        }
     }
 }

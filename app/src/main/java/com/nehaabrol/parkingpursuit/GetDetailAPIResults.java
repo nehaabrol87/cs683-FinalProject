@@ -1,6 +1,5 @@
 package com.nehaabrol.parkingpursuit;
 
-import android.app.Dialog;
 import android.os.AsyncTask;
 
 import java.io.BufferedReader;
@@ -9,11 +8,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import android.content.Context;
+import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.maps.MapFragment;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.app.Activity;
@@ -22,15 +18,13 @@ import android.app.Activity;
 /**
  * Created by neha_.abrol on 11/7/15.
  */
-public class GetAPIResults extends  AsyncTask<String, Void, String>  {
+public class GetDetailAPIResults extends  AsyncTask<String, Void, String>  {
 
     private Context context;
-    private MapFragment mapFragment;
     private Activity activity;
 
-    public GetAPIResults(Context context,MapFragment mapfragment,Activity activity) {
+    public GetDetailAPIResults(Context context,Activity activity) {
         this.context = context;
-        this.mapFragment = mapfragment;
         this.activity = activity;
     }
 
@@ -66,30 +60,33 @@ public class GetAPIResults extends  AsyncTask<String, Void, String>  {
     protected void onPostExecute(String result) {
         Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show();
         JSONObject json = null;
-        JSONArray parking_listings = null;
-        double lat = 0;
-        double lng = 0;
+        String description = " ";
+        String directions = " ";
+        String type = " ";
 
+        System.out.println("Parking Details  " + result);
         try {
             json = new JSONObject(result);
-            parking_listings = json.getJSONArray("parking_listings");
-            lat = json.getDouble("lat");
-            lng = json.getDouble("lng");
+            description =  json.getString("description");
+            type =  json.getString("type");
+            directions =  json.getString("directions");
+
+            //Set description
+            TextView description_field = (TextView) this.activity.findViewById (R.id.description);
+            description_field.setText(description);
+
+            //Set directions
+            TextView directions_field = (TextView) this.activity.findViewById (R.id.directions);
+            directions_field.setText(directions);
+
+            //Set type
+            TextView type_field = (TextView) this.activity.findViewById (R.id.type);
+            type_field.setText(type);
+
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
-            if (parking_listings != null) {
-                MapsActivity maps = new MapsActivity(context,mapFragment,activity);
-                maps.addMapsOnMarker(parking_listings, lat, lng);
-            } else {
+    }
 
-              //openDialog();
-            }
-        }
-//    public void openDialog() {
-//        final Dialog dialog = new Dialog(context);
-//        dialog.setContentView(R.layout.error_dialog);
-//        dialog.setTitle(R.string.dialog_noresults_title);
-//        dialog.show();
-//    }
-  }
+}

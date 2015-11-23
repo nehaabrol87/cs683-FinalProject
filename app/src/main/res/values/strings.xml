@@ -4,4 +4,7 @@
     <string name="action_settings">Settings</string>
     <string name="str_atv_places">Enter Place Here</string>
     <string name="title_activity_maps">Map</string>
+    <string name="dialog_noresults">Sorry there is no parking listing at this location</string>
+    <string name="dialog_noresults_title">Error No Results</string>
+    <string name="park_whiz_key">296ce162e9bb823e5c66bd85280aa208</string>
 </resources>
