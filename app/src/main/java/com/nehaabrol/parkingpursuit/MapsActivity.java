@@ -229,7 +229,7 @@ public class MapsActivity implements LocationListener,OnMarkerClickListener {
                 parking_data.put("covered",covered);
                 parking_data.put("mobile_pass",mobile_pass);
                 parking_data.put("restroom",restroom);
-                parking_data.put("likes","Recommendations "+likes);
+                parking_data.put("likes",likes);
                 parking_data.put("spots","No of Available Spots " + spots);
                 parking_data.put("distance",distance + " miles away");
 
@@ -240,7 +240,6 @@ public class MapsActivity implements LocationListener,OnMarkerClickListener {
 
 
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng),14.0f));
-            //mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
             id= mMap.addMarker(new MarkerOptions()
                             .position(new LatLng(latitude, longitude)).title("Name:" + location_name)
                             .icon(BitmapDescriptorFactory.fromBitmap(writeTextOnDrawable(icon, "$"+price)))).getId();
