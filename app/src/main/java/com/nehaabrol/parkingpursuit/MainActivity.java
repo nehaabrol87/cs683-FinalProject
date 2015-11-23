@@ -76,12 +76,6 @@ public class MainActivity extends Activity   implements OnClickListener,OnItemCl
         mHour = c.get(Calendar.HOUR_OF_DAY);
         mMinute = c.get(Calendar.MINUTE);
 
-        //Set current date/Time
-        txtDate.setText(mDay + "-"+ (mMonth + 1) + "-" + mYear);
-        txtTime.setText(mHour + ":" + mMinute);
-
-        //Set Current time
-
 
         //Call google Maps API
         mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
@@ -96,6 +90,12 @@ public class MainActivity extends Activity   implements OnClickListener,OnItemCl
 
         txtDate = (EditText)findViewById(R.id.txtDate);
         txtTime = (EditText)findViewById(R.id.txtTime);
+
+        //Set current date/Time
+
+
+        txtDate.setText(mDay + "-"+ (mMonth + 1));
+        txtTime.setText(mHour + ":" + mMinute);
 
         btnCalendar.setOnClickListener(this);
         btnTimePicker.setOnClickListener(this);
