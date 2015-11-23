@@ -17,3 +17,9 @@
 7.fragment (Match parent error on layout height)
 
 8.Loses results when orientation is changed(Implement that)
+
+9.hidden panel add scroll
+
+10.Distance calc
+
+11.Recommendations image
