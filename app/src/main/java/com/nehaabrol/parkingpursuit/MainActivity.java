@@ -41,19 +41,24 @@ import android.util.Log;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.View.OnClickListener;
+import java.util.TimeZone;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.text.DateFormat;
 
 public class MainActivity extends Activity   implements OnClickListener,OnItemClickListener {
 
     private String updatedValue;
     public View hiddenPanel;
     public static   MapFragment mapFragment;
+    private static MainActivity main = new MainActivity();
     private static final String LOG_TAG = "Google Places Autocomplete";
     private static final String PLACES_API_BASE = "https://maps.googleapis.com/maps/api/place";
     private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
     private static final String OUT_JSON = "/json";
     private static final String API_KEY = "AIzaSyABnXKSGwNY4LhUExDF48esvU4n9z_Cypc";
-    private Button btnCalendar, btnTimePicker;
-    private EditText txtDate, txtTime;
+    private Button btnCalendarStart, btnTimeStart,btnCalendarEnd,btnTimeEnd;
+    private EditText txtDateStart, txtTimeStart ,txtDateEnd,txtTimeEnd;
     // Variable for storing current date and time
     private int mYear, mMonth, mDay, mHour, mMinute;
     // Process to get Current Date
@@ -85,20 +90,23 @@ public class MainActivity extends Activity   implements OnClickListener,OnItemCl
         hiddenPanel = findViewById(R.id.hidden_panel);
 
         //Get date Time picker
-        btnCalendar = (Button)findViewById(R.id.btnCalendar);
-        btnTimePicker = (Button)findViewById(R.id.btnTimePicker);
+        btnCalendarStart = (Button)findViewById(R.id.btnCalendarStart);
+        btnTimeStart = (Button)findViewById(R.id.btnTimeStart);
+        btnCalendarEnd = (Button)findViewById(R.id.btnCalendarEnd);
+        btnTimeEnd = (Button)findViewById(R.id.btnTimeEnd);
 
-        txtDate = (EditText)findViewById(R.id.txtDate);
-        txtTime = (EditText)findViewById(R.id.txtTime);
+        txtDateStart = (EditText)findViewById(R.id.txtDateStart);
+        txtTimeStart = (EditText)findViewById(R.id.txtTimeStart);
+        txtDateEnd = (EditText)findViewById(R.id.txtDateEnd);
+        txtTimeEnd = (EditText)findViewById(R.id.txtTimeEnd);
 
         //Set current date/Time
+        setCurrentDateTime();
 
-
-        txtDate.setText(mDay + "-"+ (mMonth + 1));
-        txtTime.setText(mHour + ":" + mMinute);
-
-        btnCalendar.setOnClickListener(this);
-        btnTimePicker.setOnClickListener(this);
+        btnCalendarStart.setOnClickListener(this);
+        btnTimeStart.setOnClickListener(this);
+        btnCalendarEnd.setOnClickListener(this);
+        btnTimeEnd.setOnClickListener(this);
 
         //Get Autocomplete textview
         AutoCompleteTextView autoCompView = (AutoCompleteTextView) findViewById(R.id.destination);
@@ -108,32 +116,54 @@ public class MainActivity extends Activity   implements OnClickListener,OnItemCl
 
     }
 
+    public void setCurrentDateTime() {
+        long unixTime = System.currentTimeMillis() / 1000L;
+        long after3Hours = (unixTime + 10800);
+
+        txtDateStart.setText(mDay + "/" + (mMonth + 1) + "/" + mYear);
+        txtTimeStart.setText(mHour + ":" + mMinute);
+
+        Date date = new Date(after3Hours *1000L); // *1000 is to convert seconds to milliseconds
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm"); // the format of your date
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT-5")); // give a timezone reference for formating
+        String formattedDate = sdf.format(date);
+
+        String [] formattedDateSeparated = formattedDate.split(" ");
+
+        txtDateEnd.setText(formattedDateSeparated[0]);
+        txtTimeEnd.setText(formattedDateSeparated[1]);
+    }
+
     @Override
-    public void onClick(View v) {
-        if (v == btnCalendar) {
+    public void onClick(final View v) {
+        if (v == btnCalendarStart || v==btnCalendarEnd) {
             // Launch Date Picker Dialog
             DatePickerDialog dpd = new DatePickerDialog(this,new DatePickerDialog.OnDateSetListener() {
 
                 @Override
-                public void onDateSet(DatePicker view, int year,
-                                      int monthOfYear, int dayOfMonth) {
-                    // Display Selected date in textbox
-                    txtDate.setText(dayOfMonth + "-"
-                            + (monthOfYear + 1) + "-" + year);
-
+                public void onDateSet(DatePicker view, int year,int monthOfYear, int dayOfMonth) {
+                // Display Selected date in textbox
+                    if(v ==btnCalendarStart){
+                        txtDateStart.setText(dayOfMonth + "/"+ (monthOfYear + 1) + "/" + year);
+                    } else {
+                        txtDateEnd.setText(dayOfMonth + "/"+ (monthOfYear + 1) + "/" + year);
+                    }
                 }
             }, mYear, mMonth, mDay);
             dpd.show();
         }
-        if (v == btnTimePicker) {
+        if (v == btnTimeStart || v==btnTimeEnd) {
             // Launch Time Picker Dialog
             TimePickerDialog tpd = new TimePickerDialog(this,new TimePickerDialog.OnTimeSetListener() {
 
                 @Override
-                public void onTimeSet(TimePicker view, int hourOfDay,
-                                      int minute) {
-                    // Display Selected time in textbox
-                    txtTime.setText(hourOfDay + ":" + minute);
+                public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                // Display Selected time in textbox
+                    if(v == btnTimeStart){
+                        txtTimeStart.setText(hourOfDay + ":" + minute);
+                    } else {
+                        txtTimeEnd.setText(hourOfDay + ":" + minute);
+                    }
                 }
             }, mHour, mMinute, false);
             tpd.show();
