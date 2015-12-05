@@ -64,7 +64,6 @@ public class GetAPIResults extends  AsyncTask<String, Void, String>  {
     // onPostExecute displays the results of the AsyncTask.
     @Override
     protected void onPostExecute(String result) {
-        Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show();
         JSONObject json = null;
         JSONArray parking_listings = null;
         double lat = 0;
@@ -79,17 +78,12 @@ public class GetAPIResults extends  AsyncTask<String, Void, String>  {
             e.printStackTrace();
         }
             if (parking_listings != null) {
+                Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show();
                 MapsActivity maps = new MapsActivity(context,mapFragment,activity);
                 maps.addMapsOnMarker(parking_listings, lat, lng);
             } else {
 
-              //openDialog();
+                Toast.makeText(context, "Sorry! No Parking Garages found", Toast.LENGTH_SHORT).show();
             }
         }
-//    public void openDialog() {
-//        final Dialog dialog = new Dialog(context);
-//        dialog.setContentView(R.layout.error_dialog);
-//        dialog.setTitle(R.string.dialog_noresults_title);
-//        dialog.show();
-//    }
   }

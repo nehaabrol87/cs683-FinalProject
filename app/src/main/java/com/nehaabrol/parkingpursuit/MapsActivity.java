@@ -1,20 +1,19 @@
 package com.nehaabrol.parkingpursuit;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Toast;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -22,6 +21,7 @@ import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Marker;
+
 import org.json.JSONObject;
 
 import org.json.JSONArray;
@@ -30,13 +30,16 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+
 import android.os.AsyncTask;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
@@ -46,89 +49,37 @@ import android.graphics.Paint.Align;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
+
 import java.util.HashMap;
+
 import android.widget.ImageView;
 import android.util.Log;
+import android.app.AlertDialog;
+import android.provider.Settings;
+import android.content.DialogInterface;
+import android.app.AlertDialog.Builder;
+import android.content.Intent;
+
 import com.google.android.gms.maps.MapFragment;
 
 
 /**
  * Created by neha_.abrol on 11/7/15.
  */
-public class MapsActivity implements LocationListener,OnMarkerClickListener {
+public class MapsActivity implements  OnMarkerClickListener {
 
     private static GoogleMap  mMap;
-    private Location location;
-    private Context context;
+    private  Context context;
     private View hiddenPanel;
-    private LocationManager locationManager;
     private Activity activity;
     private HashMap<String, JSONObject> markerInfoList = new HashMap<String, JSONObject>();
 
-    public MapsActivity(Context context,MapFragment mapFragment,Activity activity) {
+    public MapsActivity(final Context context, MapFragment mapFragment, Activity activity) {
         this.context = context;
         this.activity = activity;
-
         mMap = mapFragment.getMap();
-        mMap.setMyLocationEnabled(true);
-        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-
-        //Check permissions (Required for API>23
-        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
-            //TODO  Ask User for permissions
-        }
-
-        Criteria criteria = new Criteria();
-        String provider = locationManager.getBestProvider(criteria, false);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0, this);
-
-        if(provider!=null && !provider.equals("")){
-            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            if(location!=null) {
-                onLocationChanged(location);
-                locationManager.removeUpdates(this);
-            }
-            else
-                Toast.makeText(context, "Location can't be retrieved", Toast.LENGTH_SHORT).show();
-        }else{
-            Toast.makeText(context, "No Provider Found", Toast.LENGTH_SHORT).show();
-        }
     }
 
-    @Override
-    public void onLocationChanged(Location location)  {
-//        System.out.println("On location changed" + location);
-//        String address = " ";
-//        double latitude = location.getLatitude();
-//        double longitude = location.getLongitude();
-//        LatLng latLng = new LatLng(latitude, longitude);
-//        if(Geocoder.isPresent()){
-//            Geocoder gcd = new Geocoder(context , Locale.getDefault());
-//            try {
-//                List<Address> addresses = gcd.getFromLocation(latitude, longitude, 1);
-//                address = addresses.get(0).getAddressLine(0);
-//            } catch (IOException e) { e.printStackTrace(); }
-//        }
-//        mMap.addMarker(new MarkerOptions()
-//                .position(latLng).title("Current Location:" + address));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-//        mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-        // TODO Auto-generated method stub
-    }
 
     //Method to add markers on map based on API resposne
     public  void addMapsOnMarker(JSONArray parking_listings , Double lat, Double lng) {

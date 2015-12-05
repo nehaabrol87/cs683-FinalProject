@@ -4,77 +4,145 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content">
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/linearLayout1">
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:editable="false"
-            android:id="@+id/txtDateStart">
-        </EditText>
-        <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0"
-            android:id="@+id/btnCalendarStart"
-            android:text="Start Date"
-            android:layout_width="100dp">
-        </Button>
+            android:layout_margin="5dp"
+            android:id="@+id/linearLayout1">
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:editable="false"
+                android:id="@+id/txtDateStart">
+            </EditText>
+            <Button
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:id="@+id/btnCalendarStart"
+                android:background="@drawable/calendar"
+                android:layout_width="50dp">
+            </Button>
+        </LinearLayout>
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:layout_margin="5dp"
+             android:layout_weight="0"
+             android:id="@+id/linearLayout2">
+             <EditText
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_weight="0"
+                 android:id="@+id/txtTimeStart"
+                 android:editable="false">
+             </EditText>
+             <Button
+                 android:layout_height="wrap_content"
+                 android:layout_weight="0"
+                 android:layout_width="50dp"
+                 android:id="@+id/btnTimeStart"
+                 android:background="@drawable/clock" >
+             </Button>
+               <TextView
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:text ="Start Date/Time"
+                   android:layout_margin="10dp"
+                   android:textColor="#000000"
+                   android:textSize="20dp"
+                   android:layout_weight="0" />
+         </LinearLayout>
     </LinearLayout>
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/linearLayout1a">
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:editable="false"
-            android:id="@+id/txtDateEnd">
-        </EditText>
-        <Button
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:id="@+id/btnCalendarEnd"
-            android:text="End Date"
-            android:layout_width="100dp">
-        </Button>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/linearLayout2">
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:id="@+id/txtTimeStart"
-            android:editable="false">
-        </EditText>
-        <Button
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:id="@+id/btnTimeStart"
-            android:text="Start Time"
-            android:layout_width="100dp"></Button>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/linearLayout2b">
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:editable="false"
-            android:id="@+id/txtTimeEnd">
-        </EditText>
-        <Button
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:id="@+id/btnTimeEnd"
-            android:text="End Time"
-            android:layout_width="100dp"></Button>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+          <LinearLayout
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+               android:layout_weight="0"
+              android:layout_margin="5dp"
+              android:id="@+id/linearLayout1a">
+              <EditText
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_weight="1"
+                  android:editable="false"
+                  android:id="@+id/txtDateEnd">
+              </EditText>
+              <Button
+                  android:layout_height="wrap_content"
+                  android:layout_weight="0"
+                  android:id="@+id/btnCalendarEnd"
+                  android:background="@drawable/calendar"
+                  android:layout_width="50dp">
+              </Button>
+          </LinearLayout>
+
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:layout_margin="5dp"
+             android:layout_weight="0"
+             android:id="@+id/linearLayout2b">
+             <EditText
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_weight="0"
+                 android:editable="false"
+                 android:id="@+id/txtTimeEnd">
+             </EditText>
+             <Button
+                 android:layout_height="wrap_content"
+                 android:layout_weight="0"
+                 android:id="@+id/btnTimeEnd"
+                 android:background="@drawable/clock"
+                 android:layout_width="50dp"></Button>
+             <TextView
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:text ="End Date/Time"
+                 android:layout_margin="10dp"
+                 android:textColor="#000000"
+                 android:textSize="20dp"
+                 android:layout_weight="0" />
+         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
