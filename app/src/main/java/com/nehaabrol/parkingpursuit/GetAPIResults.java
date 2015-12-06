@@ -27,6 +27,9 @@ public class GetAPIResults extends  AsyncTask<String, Void, String>  {
     private Context context;
     private MapFragment mapFragment;
     private Activity activity;
+    private  JSONArray parking_listings = null;
+    private double lat = 0;
+    private double lng = 0;
 
     public GetAPIResults(Context context,MapFragment mapfragment,Activity activity) {
         this.context = context;
@@ -65,9 +68,6 @@ public class GetAPIResults extends  AsyncTask<String, Void, String>  {
     @Override
     protected void onPostExecute(String result) {
         JSONObject json = null;
-        JSONArray parking_listings = null;
-        double lat = 0;
-        double lng = 0;
 
         try {
             json = new JSONObject(result);
@@ -85,5 +85,17 @@ public class GetAPIResults extends  AsyncTask<String, Void, String>  {
 
                 Toast.makeText(context, "Sorry! No Parking Garages found", Toast.LENGTH_SHORT).show();
             }
-        }
+    }
+
+    public  JSONArray getListings(){
+        return parking_listings;
+    }
+
+    public  Double getLat(){
+        return lat;
+    }
+
+    public  Double getLong(){
+        return lng;
+    }
   }

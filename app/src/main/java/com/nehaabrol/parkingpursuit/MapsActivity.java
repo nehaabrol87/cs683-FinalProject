@@ -72,17 +72,20 @@ public class MapsActivity implements  OnMarkerClickListener {
     private  Context context;
     private View hiddenPanel;
     private Activity activity;
+    private MapFragment mapFragment;
     private HashMap<String, JSONObject> markerInfoList = new HashMap<String, JSONObject>();
 
     public MapsActivity(final Context context, MapFragment mapFragment, Activity activity) {
         this.context = context;
         this.activity = activity;
-        mMap = mapFragment.getMap();
+        this.mapFragment = mapFragment;
     }
 
 
     //Method to add markers on map based on API resposne
     public  void addMapsOnMarker(JSONArray parking_listings , Double lat, Double lng) {
+        mMap = mapFragment.getMap();
+
         JSONObject parking_data;
         double latitude = 0;
         double longitude = 0;
@@ -188,8 +191,7 @@ public class MapsActivity implements  OnMarkerClickListener {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-
-
+            
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng),14.0f));
             id= mMap.addMarker(new MarkerOptions()
                             .position(new LatLng(latitude, longitude)).title("Name:" + location_name)
