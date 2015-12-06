@@ -7,7 +7,6 @@
     import android.app.TimePickerDialog;
     import android.content.DialogInterface;
     import android.location.Address;
-    import android.location.Criteria;
     import android.location.Geocoder;
     import android.location.Location;
     import android.location.LocationListener;
@@ -22,7 +21,6 @@
     import com.google.android.gms.common.ConnectionResult;
     import com.google.android.gms.maps.model.LatLng;
     import com.google.android.gms.maps.model.MarkerOptions;
-    import com.google.android.gms.maps.model.Marker;
 
     import android.widget.AdapterView.OnItemClickListener;
     import android.view.View;
@@ -37,17 +35,14 @@
     import java.io.UnsupportedEncodingException;
     import java.util.ArrayList;
     import java.util.Calendar;
-
     import android.widget.Button;
     import android.widget.DatePicker;
     import android.widget.EditText;
     import android.widget.TimePicker;
     import android.widget.Toast;
-
     import org.json.JSONArray;
     import org.json.JSONException;
     import org.json.JSONObject;
-
     import android.content.Context;
     import android.widget.ArrayAdapter;
     import android.widget.Filter;
@@ -56,17 +51,13 @@
     import android.view.animation.Animation;
     import android.view.animation.AnimationUtils;
     import android.view.View.OnClickListener;
-
     import java.util.List;
     import java.util.Locale;
     import java.util.TimeZone;
     import java.text.SimpleDateFormat;
-
     import android.view.Menu;
     import android.view.MenuItem;
-
     import java.util.Date;
-
     import android.widget.ListView;
     import android.support.v4.widget.DrawerLayout;
     import android.support.v7.app.ActionBarDrawerToggle;
@@ -74,11 +65,9 @@
     import android.content.Intent;
 
     import com.google.android.gms.maps.GoogleMap;
-
     import android.provider.Settings;
     import android.view.inputmethod.InputMethodManager;
 
-    import android.app.Dialog;;
 
     public class MainActivity extends AppCompatActivity implements OnClickListener, OnItemClickListener, LocationListener {
 
@@ -90,21 +79,28 @@
         private ArrayAdapter<String> mAdapter;
         public View hiddenPanel;
         public GoogleMap mMap;
-        private Marker marker;
         public static MapFragment mapFragment;
         private static MainActivity main = new MainActivity();
         private static final String LOG_TAG = "Google Places Autocomplete";
         private static final String PLACES_API_BASE = "https://maps.googleapis.com/maps/api/place";
         private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
         private static final String OUT_JSON = "/json";
-        private static final String API_KEY = "AIzaSyABnXKSGwNY4LhUExDF48esvU4n9z_Cypc";
+        private static final String API_KEY = "AIzaSyCjEZXOWU6WX09TxR5Nlb6f46wceV-MoJE";
         private Button btnCalendarStart, btnTimeStart, btnCalendarEnd, btnTimeEnd;
         private EditText txtDateStart, txtTimeStart, txtDateEnd, txtTimeEnd;
         // Variable for storing current date and time
         private int mYear, mMonth, mDay, mHour, mMinute;
         protected static final int SUB_ACTIVITY_REQUEST_CODE = 100;
+        //Objec for GetApiResults
+        private GetAPIResults apiResults;
+        private MapsActivity mapsActivity;
+        private boolean saved;
+        private String parking_listings;
+        private Double latitude;
+        private Double longitude;
+        private boolean locationUpdated = false;
         private LocationManager locationManager;
-        private Location location;
+        private AutoCompleteTextView autoCompView;
 
         // Process to get Current Date
         private final Calendar c = Calendar.getInstance();
@@ -115,26 +111,50 @@
             if (!isGooglePlayServicesAvailable()) {
                 finish();
             }
+
+            //Create view
             setContentView(R.layout.activity_home_page);
 
-            //Set Date TimePicker
-            setDateTimePicker();
-
-            //Call the method to call the Maps activity
-            addMaps();
-
-            //Set the drawer
-            setupDrawer();
-            addDrawerItems();
-
-            //Get hidden Panel
-            hiddenPanel = findViewById(R.id.hidden_panel);
+            //Add Maps
+            mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
+            mapsActivity = new MapsActivity(getBaseContext(),mapFragment, this);
 
             //Get Autocomplete textview
-            AutoCompleteTextView autoCompView = (AutoCompleteTextView) findViewById(R.id.destination);
+            autoCompView = (AutoCompleteTextView) findViewById(R.id.destination);
             autoCompView.setAdapter(new GooglePlacesAutocompleteAdapter(this, R.layout.list_item));
             autoCompView.setOnItemClickListener(this);
 
+            //Set Date TimePicker
+            setDateTimePicker();
+            //Call the method to call the Maps activity
+            //Set the drawer
+            setupDrawer();
+            addDrawerItems();
+            //Get hidden Panel
+            hiddenPanel = findViewById(R.id.hidden_panel);
+
+            //Call to get API esults
+            apiResults = new GetAPIResults(getBaseContext(),mapFragment, this);
+
+            //Check if there is a savedInstance
+            if(savedInstanceState != null && savedInstanceState.getString("parking_listings") != null ) {
+                saved = true;
+                JSONArray parking_listings_array = null;
+
+                try {
+                    latitude = savedInstanceState.getDouble("lat");
+                    longitude = savedInstanceState.getDouble("lng");
+                    parking_listings = savedInstanceState.getString("parking_listings");
+                    parking_listings_array = new JSONArray(parking_listings);
+                    mapsActivity.addMapsOnMarker(parking_listings_array, latitude, longitude);
+                    System.out.println("In Saved State" + parking_listings);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                mMap = mapFragment.getMap();
+                getCurrentLocationOfUser();
+            }
         }
 
         public void setDateTimePicker() {
@@ -167,58 +187,82 @@
             btnTimeEnd.setOnClickListener(this);
         }
 
-        public void addMaps() {
 
-            // Getting Google Play availability status
-            int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getBaseContext());
-
-            // Showing status
-            if (status != ConnectionResult.SUCCESS) { // Google Play Services are not available
-                int requestCode = 10;
-                Dialog dialog = GooglePlayServicesUtil.getErrorDialog(status, this, requestCode);
-                dialog.show();
-
-            } else {
-               // Getting reference to the SupportMapFragment of activity_main.xml
-                  mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
-                // Getting GoogleMap object from the fragment
-                mMap = mapFragment.getMap();
-
-                // Getting LocationManager object from System Service LOCATION_SERVICE
-                LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-                // Creating a criteria object to retrieve provider
-                Criteria criteria = new Criteria();
-                // Getting the name of the best provider
-                String provider = locationManager.getBestProvider(criteria, true);
-
-                try {
-                // Getting Current Location
+        public void getCurrentLocationOfUser(){
+            System.out.println("getCurrentLocationwasCalled");
+            try {
+                //Can access User's location
+                if (canGetLocation()) {
+                    System.out.println("Location services on");
+                    locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
                     Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0, this);
-                    //locationManager.requestLocationUpdates(provider, 20000, 0, this);
-                    if (location != null) {
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+                    if(location!= null) {
                         onLocationChanged(location);
+                        locationManager.removeUpdates(MainActivity.this);
                     }
-                    //Ask user for permission if GPS is off
-                    if(provider!=null && !provider.equals("")){
-                        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                          if(location==null) {
-                              askUserToTurnLocationOn();
-                          }
-                        } else {
-                             Toast.makeText(getBaseContext(), "No Provider Found", Toast.LENGTH_SHORT).show();
-                           }
-                    locationManager.removeUpdates(MainActivity.this);
-                } catch (SecurityException e) {
-                    Log.e("PERMISSION_EXCEPTION","PERMISSION_NOT_GRANTED");
+                } else {
+                    //Display alert box to turn location services om
+                    askUserToTurnLocationOn();
                 }
+
+            } catch (SecurityException e) {
+                Log.e("PERMISSION_EXCEPTION","PERMISSION_NOT_GRANTED");
             }
+        }
+
+        public boolean canGetLocation() {
+            LocationManager locationManager;
+            boolean gpsEnabled = false;
+            boolean networkEnabled = false;
+
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+            // exceptions will be thrown if provider is not permitted.
+            try {
+                gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            } catch (Exception ex) {
+
+            }
+            try {
+                networkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            } catch (Exception ex) {
+            }
+
+            return gpsEnabled || networkEnabled;
+        }
+
+        private void askUserToTurnLocationOn(){
+            final AlertDialog.Builder builder =
+                    new AlertDialog.Builder(MainActivity.this);
+            final String action = Settings.ACTION_LOCATION_SOURCE_SETTINGS;
+            final String message = "Enable either GPS or any other location"
+                    + " service to find current location.  Click OK to go to"
+                    + " location services settings to let you do so.";
+
+            builder.setMessage(message)
+                    .setPositiveButton("OK",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface d, int id) {
+                                    d.dismiss();
+                                    //finish();
+                                    MainActivity.this.startActivity(new Intent(action));
+                                }
+                            })
+                    .setNegativeButton("Cancel",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface d, int id) {
+                                    d.cancel();
+                                }
+                            });
+            builder.create().show();
         }
 
         @Override
         public void onLocationChanged(Location location) {
-            if (location != null) {
-                System.out.println("On location changed" + location);
+            if (location != null && locationUpdated == false) {
+                locationUpdated = true;
+                System.out.println("locationChangedWasCalled" + location);
                 String address = " ";
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();
@@ -251,31 +295,6 @@
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
             // TODO Auto-generated method stub
-        }
-
-        private void askUserToTurnLocationOn(){
-            final AlertDialog.Builder builder =
-                    new AlertDialog.Builder(MainActivity.this);
-            final String action = Settings.ACTION_LOCATION_SOURCE_SETTINGS;
-            final String message = "Enable either GPS or any other location"
-                    + " service to find current location.  Click OK to go to"
-                    + " location services settings to let you do so.";
-
-            builder.setMessage(message)
-                    .setPositiveButton("OK",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface d, int id) {
-                                    MainActivity.this.startActivity(new Intent(action));
-                                    d.dismiss();
-                                }
-                            })
-                    .setNegativeButton("Cancel",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface d, int id) {
-                                    d.cancel();
-                                }
-                            });
-            builder.create().show();
         }
 
         private void setupDrawer() {
@@ -409,18 +428,15 @@
 
             try {
                 updatedValue = URLEncoder.encode(value,"UTF-8");
+                autoCompView.setFocusable(false);
+                autoCompView.setFocusableInTouchMode(true);
             } catch (UnsupportedEncodingException ex) {
                 ex.printStackTrace();
             }
 
             String urlString = "http://api.parkwhiz.com/search?destination="+updatedValue+"&key="+getResources().getString(R.string.park_whiz_key)+"&start="+epoch_start+"&end="+epoch_end+"&sort="+sorting+"&restroom="+0+"&security="+0+"&valet="+0+"&indoor="+0+"&eticket="+0+"&attended="+0;
-
-               //Call to get APxresults
-               GetAPIResults apiResults = new GetAPIResults(getBaseContext(),mapFragment, this);
-               apiResults.execute(urlString);
-
-            ((InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE))
-                    .toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
+            apiResults.execute(urlString);
+            hideSoftKeyboard();
         }
         public static  ArrayList autocomplete(String input) {
             ArrayList resultList = null;
@@ -485,6 +501,34 @@
             }
         }
 
+        @Override
+        public void onSaveInstanceState(Bundle savedInstanceState) {
+            // Save the user's current search
+            if(apiResults.getListings() != null ) {
+                saved = false;
+                parking_listings = apiResults.getListings().toString();
+                latitude = apiResults.getLat();
+                longitude = apiResults.getLong();
+                System.out.println("Trying to save listings after results" + parking_listings);
+                savedInstanceState.putString("parking_listings", parking_listings);
+                savedInstanceState.putDouble("lat",latitude);
+                savedInstanceState.putDouble("lng", longitude);
+                super.onSaveInstanceState(savedInstanceState);
+            }
+            if(saved) {
+                System.out.println("Trying to save on rotate "+parking_listings);
+                savedInstanceState.putString("parking_listings", parking_listings);
+                savedInstanceState.putDouble("lat", latitude);
+                savedInstanceState.putDouble("lng", longitude);
+                super.onSaveInstanceState(savedInstanceState);
+            }
+        }
+
+        public void hideSoftKeyboard(){
+            //Hide Soft keyboard
+            System.out.println("In hide soft keyboard");
+            ((InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
+        }
 
         class GooglePlacesAutocompleteAdapter extends ArrayAdapter<String> implements Filterable {
             private ArrayList<String> resultList;
@@ -534,6 +578,25 @@
         }
 
         @Override
+        public void onResume() {
+            super.onResume();  //  call the superclass method
+            if(parking_listings == null){ //Means no results have been saved till now
+                try {
+                    locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+                    Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+                    if(location!= null) {
+                        onLocationChanged(location);
+                        locationManager.removeUpdates(MainActivity.this);
+                    }
+                }
+                catch (SecurityException e) {
+                Log.e("PERMISSION_EXCEPTION","PERMISSION_NOT_GRANTED");
+                }
+            }
+        }
+
+        @Override
         protected void onPostCreate(Bundle savedInstanceState) {
             super.onPostCreate(savedInstanceState);
             // Sync the toggle state after onRestoreInstanceState has occurred.
@@ -544,6 +607,8 @@
         public void onConfigurationChanged(Configuration newConfig) {
             super.onConfigurationChanged(newConfig);
             mDrawerToggle.onConfigurationChanged(newConfig);
+            autoCompView.setFocusable(false);
+            autoCompView.setFocusableInTouchMode(true);
         }
 
         @Override
@@ -573,3 +638,5 @@
             return super.onOptionsItemSelected(item);
         }
     }
+
+

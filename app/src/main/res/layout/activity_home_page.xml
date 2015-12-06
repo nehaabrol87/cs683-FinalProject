@@ -36,8 +36,8 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:maxLines="1"
+                android:focusableInTouchMode="true"
                 android:hint="Please enter your destination" >
-                <requestFocus />
             </AutoCompleteTextView>
             <Button
                 android:layout_height="wrap_content"
