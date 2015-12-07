@@ -67,11 +67,15 @@
     import com.google.android.gms.maps.GoogleMap;
     import android.provider.Settings;
     import android.view.inputmethod.InputMethodManager;
+    import android.graphics.PorterDuff;
+    import android.widget.ProgressBar;
+    import java.util.GregorianCalendar;
+    import android.support.v4.view.ViewPager;
 
 
     public class MainActivity extends AppCompatActivity implements OnClickListener, OnItemClickListener, LocationListener {
 
-        private String updatedValue;
+        private String userSelectedDestination;
         private ActionBarDrawerToggle mDrawerToggle;
         private DrawerLayout mDrawerLayout;
         private String mActivityTitle;
@@ -86,10 +90,11 @@
         private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
         private static final String OUT_JSON = "/json";
         private static final String API_KEY = "AIzaSyCjEZXOWU6WX09TxR5Nlb6f46wceV-MoJE";
-        private Button btnCalendarStart, btnTimeStart, btnCalendarEnd, btnTimeEnd;
+        private Button btnCalendarStart, btnTimeStart, btnCalendarEnd, btnTimeEnd ,submitUpdate;
         private EditText txtDateStart, txtTimeStart, txtDateEnd, txtTimeEnd;
-        // Variable for storing current date and time
-        private int mYear, mMonth, mDay, mHour, mMinute;
+        // Variable for storing start current date and time
+        private int startYear, startMonth, startDay, startHour, startMinute;
+        private int endYear, endMonth, endDay, endHour, endMinute;
         protected static final int SUB_ACTIVITY_REQUEST_CODE = 100;
         //Objec for GetApiResults
         private GetAPIResults apiResults;
@@ -101,6 +106,9 @@
         private boolean locationUpdated = false;
         private LocationManager locationManager;
         private AutoCompleteTextView autoCompView;
+        private long userSelectedStartDateTime;
+        private long userSelectedEndDateTime;
+        private ProgressBar spinner;
 
         // Process to get Current Date
         private final Calendar c = Calendar.getInstance();
@@ -115,6 +123,11 @@
             //Create view
             setContentView(R.layout.activity_home_page);
 
+            //Spinner
+            spinner=(ProgressBar)findViewById(R.id.progressBar);
+            spinner.bringToFront();
+            spinner.setVisibility(View.GONE);
+
             //Add Maps
             mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
             mapsActivity = new MapsActivity(getBaseContext(),mapFragment, this);
@@ -123,6 +136,10 @@
             autoCompView = (AutoCompleteTextView) findViewById(R.id.destination);
             autoCompView.setAdapter(new GooglePlacesAutocompleteAdapter(this, R.layout.list_item));
             autoCompView.setOnItemClickListener(this);
+
+            //Add background to Done button
+            submitUpdate =(Button)findViewById(R.id.submitUpdate);
+            submitUpdate.getBackground().setColorFilter(0xFF000000, PorterDuff.Mode.MULTIPLY);
 
             //Set Date TimePicker
             setDateTimePicker();
@@ -147,7 +164,6 @@
                     parking_listings = savedInstanceState.getString("parking_listings");
                     parking_listings_array = new JSONArray(parking_listings);
                     mapsActivity.addMapsOnMarker(parking_listings_array, latitude, longitude);
-                    System.out.println("In Saved State" + parking_listings);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -158,15 +174,6 @@
         }
 
         public void setDateTimePicker() {
-            //Set time
-            mYear = c.get(Calendar.YEAR);
-            mMonth = c.get(Calendar.MONTH);
-            mDay = c.get(Calendar.DAY_OF_MONTH);
-            // Process to get Current Time
-            final Calendar c = Calendar.getInstance();
-            mHour = c.get(Calendar.HOUR_OF_DAY);
-            mMinute = c.get(Calendar.MINUTE);
-
             //Get date Time picker
             btnCalendarStart = (Button)findViewById(R.id.btnCalendarStart);
             btnTimeStart = (Button)findViewById(R.id.btnTimeStart);
@@ -179,17 +186,19 @@
             txtTimeEnd = (EditText)findViewById(R.id.txtTimeEnd);
 
             //Set current date/Time
-            setCurrentDateTime();
+            setDefaultStartDateTime();
+            setDefaultEndDateTime();
+
 
             btnCalendarStart.setOnClickListener(this);
             btnTimeStart.setOnClickListener(this);
             btnCalendarEnd.setOnClickListener(this);
             btnTimeEnd.setOnClickListener(this);
+            submitUpdate.setOnClickListener(this);
         }
 
 
         public void getCurrentLocationOfUser(){
-            System.out.println("getCurrentLocationwasCalled");
             try {
                 //Can access User's location
                 if (canGetLocation()) {
@@ -245,7 +254,6 @@
                             new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface d, int id) {
                                     d.dismiss();
-                                    //finish();
                                     MainActivity.this.startActivity(new Intent(action));
                                 }
                             })
@@ -338,12 +346,36 @@
             });
         }
 
-        public void setCurrentDateTime() {
-            long unixTime = System.currentTimeMillis() / 1000L;
-            long after3Hours = (unixTime + 10800);
+        public void setDefaultStartDateTime(){
+            Date currentDate = new Date();
+            long unixTime = roundToNearestHour(currentDate).getTime()/1000L;
 
-            txtDateStart.setText(String.format("%02d",mDay) + "/" + String.format("%02d", (mMonth+1)) + "/" + mYear);
-            txtTimeStart.setText(String.format("%02d", mHour) + ":" + String.format("%02d", mMinute));
+
+            Date date = new Date(unixTime *1000L); // *1000 is to convert seconds to milliseconds
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm"); // the format of your date
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT-5")); // give a timezone reference for formating
+            String formattedDate = sdf.format(date);
+
+            String [] formattedDateSeparated = formattedDate.split(" ");
+            String [] formatDate = formattedDateSeparated[0].split("/");
+            String [] formatTime = formattedDateSeparated[1].split(":");
+
+
+            startDay = Integer.parseInt(formatDate[0]);
+            startMonth = Integer.parseInt(formatDate[1]) -1 ;
+            startYear  = Integer.parseInt(formatDate[2]);
+            startHour = Integer.parseInt(formatTime[0]);
+            startMinute = Integer.parseInt(formatTime[1]);
+
+
+            txtDateStart.setText(String.format("%02d",startDay) + "/" + String.format("%02d", (startMonth+1)) + "/" + startYear);
+            txtTimeStart.setText(String.format("%02d", startHour) + ":" + String.format("%02d", startMinute));
+        }
+
+        public void setDefaultEndDateTime(){
+            Date currentDate = new Date();
+            long unixTime = roundToNearestHour(currentDate).getTime()/1000L;
+            long after3Hours = (unixTime + 10800);
 
             Date date = new Date(after3Hours *1000L); // *1000 is to convert seconds to milliseconds
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm"); // the format of your date
@@ -351,45 +383,205 @@
             String formattedDate = sdf.format(date);
 
             String [] formattedDateSeparated = formattedDate.split(" ");
+            String [] formatDate = formattedDateSeparated[0].split("/");
+            String [] formatTime = formattedDateSeparated[1].split(":");
 
-            txtDateEnd.setText(formattedDateSeparated[0]);
-            txtTimeEnd.setText(formattedDateSeparated[1]);
+            endDay = Integer.parseInt(formatDate[0]);
+            endMonth = Integer.parseInt(formatDate[1]) -1 ;
+            endYear  = Integer.parseInt(formatDate[2]);
+            endHour = Integer.parseInt(formatTime[0]);
+            endMinute = Integer.parseInt(formatTime[1]);
+
+            txtDateEnd.setText(String.format("%02d", endDay) + "/" + String.format("%02d", (endMonth + 1)) + "/" + endYear);
+            txtTimeEnd.setText(String.format("%02d", endHour) + ":" + String.format("%02d", endMinute));
+        }
+
+        public Date roundToNearestHour(Date date) {
+            Calendar c = new GregorianCalendar();
+            c.setTime(date);
+            c.add(Calendar.HOUR, 1);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
+            c.set(Calendar.MILLISECOND, 0);
+            return c.getTime();
         }
 
         @Override
         public void onClick(final View v) {
-            if (v == btnCalendarStart || v==btnCalendarEnd) {
+            if (v == btnCalendarStart ) {
                 // Launch Date Picker Dialog
-                DatePickerDialog dpd = new DatePickerDialog(this,new DatePickerDialog.OnDateSetListener() {
+                DatePickerDialog dpdStart = new DatePickerDialog(this,new DatePickerDialog.OnDateSetListener() {
 
                     @Override
                     public void onDateSet(DatePicker view, int year,int monthOfYear, int dayOfMonth) {
-                    // Display Selected date in textbox
-                        if(v ==btnCalendarStart){
-                            txtDateStart.setText(String.format("%02d", dayOfMonth)+ "/"+ String.format("%02d", (monthOfYear+1)) + "/" + year);
-                        } else {
-                            txtDateEnd.setText(String.format("%02d", dayOfMonth) + "/"+ String.format("%02d", (monthOfYear+1)) + "/" + year);
-                        }
+                            // Display Selected date in textbox
+                            txtDateStart.setText(String.format("%02d", dayOfMonth) + "/" + String.format("%02d", (monthOfYear+1)) + "/" + year);
+                            startYear = year;
+                            startMonth = monthOfYear;
+                            startDay = dayOfMonth;
                     }
-                }, mYear, mMonth, mDay);
-                dpd.show();
+                }, startYear, startMonth, startDay);
+                dpdStart.show();
             }
-            if (v == btnTimeStart || v==btnTimeEnd) {
+            if (v==btnCalendarEnd) {
+                // Launch End Date Picker Dialog
+                DatePickerDialog dpdEnd = new DatePickerDialog(this,new DatePickerDialog.OnDateSetListener() {
+
+                    @Override
+                    public void onDateSet(DatePicker view, int year,int monthOfYear, int dayOfMonth) {
+                            txtDateEnd.setText(String.format("%02d", dayOfMonth) + "/"+ String.format("%02d", (monthOfYear +1)) + "/" + year);
+                            endYear = year;
+                            endMonth = monthOfYear;
+                            endDay = dayOfMonth;
+                        }
+                }, endYear, endMonth, endDay);
+                dpdEnd.show();
+            }
+            if (v == btnTimeStart) {
                 // Launch Time Picker Dialog
-                TimePickerDialog tpd = new TimePickerDialog(this,new TimePickerDialog.OnTimeSetListener() {
+                TimePickerDialog tpdStart = new TimePickerDialog(this,new TimePickerDialog.OnTimeSetListener() {
 
                     @Override
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                    // Display Selected time in textbox
-                        if(v == btnTimeStart){
-                            txtTimeStart.setText(String.format("%02d", hourOfDay)+ ":" + String.format("%02d", minute));
-                        } else {
-                            txtTimeEnd.setText(String.format("%02d", hourOfDay) + ":" + String.format("%02d", minute));
+                        startHour = hourOfDay;
+                        startMinute = minute;
+
+                        if(startMinute !=0){
+                            Date startDate = convertStringToDate(startDay, startMonth, startYear, startHour, startMinute);
+                            Date startDateRoundedToNearestHour = roundToNearestHour(startDate);
+
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm"); // the format of your date
+                            sdf.setTimeZone(TimeZone.getTimeZone("GMT-5")); // give a timezone reference for formating
+                            String formattedDate = sdf.format(startDateRoundedToNearestHour);
+
+                            String [] formattedDateSeparated = formattedDate.split(" ");
+                            String [] formatDate = formattedDateSeparated[0].split("/");
+                            String [] formatTime = formattedDateSeparated[1].split(":");
+
+                            startDay = Integer.parseInt(formatDate[0]);
+                            startMonth = Integer.parseInt(formatDate[1]) -1 ;
+                            startYear  = Integer.parseInt(formatDate[2]);
+                            startHour = Integer.parseInt(formatTime[0]);
+                            startMinute = Integer.parseInt(formatTime[1]);
+
+                            txtDateStart.setText(String.format("%02d", startDay) + "/" + String.format("%02d", (startMonth+1)) + "/" + startYear);
                         }
+
+                        txtTimeStart.setText(String.format("%02d", startHour)+ ":" + String.format("%02d", startMinute));
                     }
-                }, mHour, mMinute, false);
-                tpd.show();
+                }, startHour, startMinute, false);
+                tpdStart.show();
             }
+
+            if (v==btnTimeEnd) {
+                // Launch Time Picker Dialog
+                TimePickerDialog tpdEnd = new TimePickerDialog(this,new TimePickerDialog.OnTimeSetListener() {
+
+                    @Override
+                    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                        endHour = hourOfDay;
+                        endMinute = minute;
+                        if (endMinute!= 0) {
+                            Date endDate = convertStringToDate(endDay, endMonth, endYear, endHour, endMinute);
+                            Date endDateRoundedToNearestHour = roundToNearestHour(endDate);
+
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm"); // the format of your date
+                            sdf.setTimeZone(TimeZone.getTimeZone("GMT-5")); // give a timezone reference for formating
+                            String formattedDate = sdf.format(endDateRoundedToNearestHour);
+
+                            String [] formattedDateSeparated = formattedDate.split(" ");
+                            String [] formatDate = formattedDateSeparated[0].split("/");
+                            String [] formatTime = formattedDateSeparated[1].split(":");
+
+                            endDay = Integer.parseInt(formatDate[0]);
+                            endMonth = Integer.parseInt(formatDate[1]) -1 ;
+                            endYear  = Integer.parseInt(formatDate[2]);
+                            endHour = Integer.parseInt(formatTime[0]);
+                            endMinute = Integer.parseInt(formatTime[1]);
+
+                            txtDateEnd.setText(String.format("%02d", endDay) + "/"+ String.format("%02d", (endMonth +1)) + "/" + endYear);
+                        }
+
+                        txtTimeEnd.setText(String.format("%02d", endHour) + ":" + String.format("%02d", endMinute));
+                    }
+                }, endHour, endMinute, false);
+                tpdEnd.show();
+            }
+
+            if (v==submitUpdate) {
+                if(userSelectedDestination == null ){
+                    if(apiResults.getListings() != null) {
+                        mMap = mapFragment.getMap();
+                        mMap.clear();
+                    }
+                    Toast.makeText(MainActivity.this, "Destination cannot be empty", Toast.LENGTH_SHORT).show();
+                } else {
+                    if(doDateTimeValidation()){
+                        spinner.setVisibility(View.VISIBLE);
+                        submitUpdate.setEnabled(false);
+                        autoCompView.setFocusable(false);
+                        autoCompView.setFocusableInTouchMode(true);
+                        submitUpdate.getBackground().setColorFilter(0xFFFFFFFF, PorterDuff.Mode.MULTIPLY);
+                        String sorting ="rating";
+                        int checked_restroom =0;
+                        int checked_mobile =0;
+                        int checked_indoor =0;
+                        int checked_attended  =0;
+                        int checked_security =0;
+                        int checked_valet =0;
+                        long epoch_start = userSelectedStartDateTime;
+                        long epoch_end = userSelectedEndDateTime;
+                        String urlString = "http://api.parkwhiz.com/search?destination="+userSelectedDestination+"&key="+getResources().getString(R.string.park_whiz_key)+"&start="+epoch_start+"&end="+epoch_end+"&sort="+sorting+"&restroom="+0+"&security="+0+"&valet="+0+"&indoor="+0+"&eticket="+0+"&attended="+0;
+
+                        Toast.makeText(MainActivity.this, "Sending your request", Toast.LENGTH_SHORT).show();
+                        mMap = mapFragment.getMap();
+                        mMap.clear();
+                        apiResults= new GetAPIResults(getBaseContext(),mapFragment, this);
+                        apiResults.execute(urlString);
+                        hideSoftKeyboard();
+                    }
+                }
+            }
+        }
+
+        public Date convertStringToDate(int day,int month,int year,int hour,int minute) {
+            Date date = null;
+            String dateInString = String.format("%02d", day) + "-" + String.format("%02d", (month + 1)) + "-" + year + " "  + String.format("%02d", (hour)) + ":" + String.format("%02d", (minute));
+            SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+            try {
+                date = format.parse(dateInString);
+            } catch (Exception e) {
+            }
+            return date;
+        }
+
+        public boolean  doDateTimeValidation() {
+            Date startDate = convertStringToDate(startDay,startMonth,startYear,startHour,startMinute);
+            Date endDate = convertStringToDate(endDay,endMonth,endYear,endHour,endMinute);
+
+            userSelectedStartDateTime = startDate.getTime()/1000L;
+            userSelectedEndDateTime = endDate.getTime() /1000L;
+            long unixTime = System.currentTimeMillis() / 1000L;
+
+                if(userSelectedStartDateTime > userSelectedEndDateTime ) {
+                    Toast.makeText(MainActivity.this, "Start Date time cant be more than end date time", Toast.LENGTH_SHORT).show();
+                    if(apiResults.getListings() != null) {
+                        mMap = mapFragment.getMap();
+                        mMap.clear();
+                    }
+                    return false;
+                }
+
+                if(userSelectedStartDateTime < unixTime) {
+                    Toast.makeText(MainActivity.this, "Start time must be greater than current time", Toast.LENGTH_SHORT).show();
+                    if(apiResults.getListings() != null) {
+                        mMap = mapFragment.getMap();
+                        mMap.clear();
+                    }
+                    return false;
+                }
+
+             return true;
         }
 
         public void slideUpDown(View panel) {
@@ -415,28 +607,13 @@
 
         public void onItemClick(AdapterView adapterView, View view, int position, long id) {
             String value = (String) adapterView.getItemAtPosition(position);
-           // Toast.makeText(this, value, Toast.LENGTH_SHORT).show();
-            String sorting ="rating";
-            int checked_restroom =0;
-            int checked_mobile =0;
-            int checked_indoor =0;
-            int checked_attended  =0;
-            int checked_security =0;
-            int checked_valet =0;
-            long epoch_start = System.currentTimeMillis() /1000L; //current time
-            long epoch_end = (System.currentTimeMillis() + 10800000)/1000L; //3 hours from now
-
             try {
-                updatedValue = URLEncoder.encode(value,"UTF-8");
+                userSelectedDestination = URLEncoder.encode(value,"UTF-8");
                 autoCompView.setFocusable(false);
                 autoCompView.setFocusableInTouchMode(true);
             } catch (UnsupportedEncodingException ex) {
                 ex.printStackTrace();
             }
-
-            String urlString = "http://api.parkwhiz.com/search?destination="+updatedValue+"&key="+getResources().getString(R.string.park_whiz_key)+"&start="+epoch_start+"&end="+epoch_end+"&sort="+sorting+"&restroom="+0+"&security="+0+"&valet="+0+"&indoor="+0+"&eticket="+0+"&attended="+0;
-            apiResults.execute(urlString);
-            hideSoftKeyboard();
         }
         public static  ArrayList autocomplete(String input) {
             ArrayList resultList = null;
@@ -509,14 +686,12 @@
                 parking_listings = apiResults.getListings().toString();
                 latitude = apiResults.getLat();
                 longitude = apiResults.getLong();
-                System.out.println("Trying to save listings after results" + parking_listings);
                 savedInstanceState.putString("parking_listings", parking_listings);
                 savedInstanceState.putDouble("lat",latitude);
                 savedInstanceState.putDouble("lng", longitude);
                 super.onSaveInstanceState(savedInstanceState);
             }
             if(saved) {
-                System.out.println("Trying to save on rotate "+parking_listings);
                 savedInstanceState.putString("parking_listings", parking_listings);
                 savedInstanceState.putDouble("lat", latitude);
                 savedInstanceState.putDouble("lng", longitude);
@@ -524,10 +699,13 @@
             }
         }
 
-        public void hideSoftKeyboard(){
+        public void hideSoftKeyboard() {
             //Hide Soft keyboard
-            System.out.println("In hide soft keyboard");
-            ((InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
+            InputMethodManager imm = (InputMethodManager)
+            getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(
+                    autoCompView.getWindowToken(), 0);
+
         }
 
         class GooglePlacesAutocompleteAdapter extends ArrayAdapter<String> implements Filterable {
@@ -607,6 +785,7 @@
         public void onConfigurationChanged(Configuration newConfig) {
             super.onConfigurationChanged(newConfig);
             mDrawerToggle.onConfigurationChanged(newConfig);
+            hideSoftKeyboard();
             autoCompView.setFocusable(false);
             autoCompView.setFocusableInTouchMode(true);
         }

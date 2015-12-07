@@ -2,6 +2,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clickable="true"
     android:background="@android:color/white"
     android:visibility="gone">
 
@@ -19,7 +20,7 @@
             android:background="@drawable/back"
             android:onClick="slideUpDown" />
         <TextView
-            android:id="@+id/header0"
+            android:id="@+id/headerBack"
             android:layout_toRightOf="@+id/back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -90,7 +91,7 @@
                     android:layout_margin="5dp"
                     android:textColor="#000000"
                     android:textSize="20sp" />
-                </RelativeLayout>
+            </RelativeLayout>
             <RelativeLayout
                 android:id="@+id/topRight_Below"
                 android:layout_width="wrap_content"
@@ -116,13 +117,84 @@
         </RelativeLayout>
     </RelativeLayout>
 
+
     <RelativeLayout
-    android:id="@+id/panel1"
-    android:layout_below="@+id/topPanel"
-    android:layout_marginTop="10dp"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center" >
+        android:id="@+id/panel0"
+        android:layout_below="@+id/topPanel"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center" >
+        <RelativeLayout
+            android:id="@+id/header0"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:background="#A8A8A8">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#fff"
+                android:layout_margin="5dp"
+                android:text="Start Date time"
+                android:textStyle="bold"
+                android:textSize="25sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/textStart"
+            android:layout_below="@+id/header0"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/startDateTimeLabel"
+                android:layout_width="wrap_content"
+                android:text="Start Date Time"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/startDateTime"
+                android:layout_toRightOf="@+id/startDateTimeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/textEnd"
+            android:layout_below="@+id/textStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/endDateTimeLabel"
+                android:layout_width="wrap_content"
+                android:text="End Date Time  "
+                android:textStyle="bold"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/endDateTime"
+                android:layout_toRightOf="@+id/endDateTimeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/panel1"
+        android:layout_below="@+id/panel0"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center" >
         <RelativeLayout
             android:id="@+id/header1"
             android:layout_width="match_parent"
@@ -159,7 +231,7 @@
         android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-            <RelativeLayout
+        <RelativeLayout
             android:id="@+id/header2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -180,30 +252,30 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="left">
-                <ImageView
-                    android:id="@+id/security_image"
-                    android:layout_toLeftOf="@+id/security_text"
-                    android:layout_width="30dp"
-                    android:src="@drawable/lock"
-                    android:layout_height="30dp" />
-                <TextView
-                    android:id="@+id/security_text"
-                    android:layout_toLeftOf="@+id/security_status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#000000"
-                    android:text="Security"
-                    android:textStyle="bold"
-                    android:layout_margin="5dp"
-                    android:textSize="15sp" />
-                <TextView
-                    android:id="@+id/security_status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#000000"
-                    android:layout_margin="5dp"
-                    android:textStyle="bold"
-                    android:textSize="15sp" />
+            <ImageView
+                android:id="@+id/security_image"
+                android:layout_toLeftOf="@+id/security_text"
+                android:layout_width="30dp"
+                android:src="@drawable/lock"
+                android:layout_height="30dp" />
+            <TextView
+                android:id="@+id/security_text"
+                android:layout_toLeftOf="@+id/security_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:text="Security"
+                android:textStyle="bold"
+                android:layout_margin="5dp"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/security_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:layout_margin="5dp"
+                android:textStyle="bold"
+                android:textSize="15sp" />
         </RelativeLayout>
         <RelativeLayout
             android:id="@+id/text2b"

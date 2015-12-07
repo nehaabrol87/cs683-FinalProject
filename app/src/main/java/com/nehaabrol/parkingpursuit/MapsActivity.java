@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.PorterDuff;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
@@ -12,6 +13,8 @@ import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -27,16 +30,10 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
-
 import android.os.AsyncTask;
 import android.widget.TextView;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
@@ -50,17 +47,14 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.TimeZone;
 
 import android.widget.ImageView;
 import android.util.Log;
-import android.app.AlertDialog;
-import android.provider.Settings;
-import android.content.DialogInterface;
-import android.app.AlertDialog.Builder;
-import android.content.Intent;
-
-import com.google.android.gms.maps.MapFragment;
 
 
 /**
@@ -73,6 +67,7 @@ public class MapsActivity implements  OnMarkerClickListener {
     private View hiddenPanel;
     private Activity activity;
     private MapFragment mapFragment;
+    private  final String Google_Maps_Api_Key  = "AIzaSyDgnc1W7wxDVqY0ZMulzOhU8SdC6QXOKRM";
     private HashMap<String, JSONObject> markerInfoList = new HashMap<String, JSONObject>();
 
     public MapsActivity(final Context context, MapFragment mapFragment, Activity activity) {
@@ -85,10 +80,15 @@ public class MapsActivity implements  OnMarkerClickListener {
     //Method to add markers on map based on API resposne
     public  void addMapsOnMarker(JSONArray parking_listings , Double lat, Double lng) {
         mMap = mapFragment.getMap();
+        mMap.clear();
 
         JSONObject parking_data;
         double latitude = 0;
         double longitude = 0;
+        String startDateTime;
+        String endDateTime;
+        long startDateTimeStamp = 0;
+        long endDateTimeStamp = 0;
         Integer price = 0;
         String price_formatted = " ";
         String location_name = " ";
@@ -111,14 +111,17 @@ public class MapsActivity implements  OnMarkerClickListener {
 
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(),R.drawable.my_marker_icon);
         icon = Bitmap.createScaledBitmap(icon, 45, 70, true);
-
-        System.out.println("Parking Listings " +parking_listings);
-        System.out.println("Latlng" +latLng);
+        System.out.println("Parking Listings" + parking_listings);
 
         for (int i = 0; i < parking_listings.length(); i++) {
             parking_data = new JSONObject();
             try {
                 latitude = parking_listings.getJSONObject(i).getDouble("lat");
+                startDateTimeStamp = parking_listings.getJSONObject(i).getLong("start");
+                endDateTimeStamp = parking_listings.getJSONObject(i).getLong("end");
+
+                startDateTime = convertUnixTimeStampToDate(startDateTimeStamp);
+                endDateTime = convertUnixTimeStampToDate(endDateTimeStamp);
                 address = parking_listings.getJSONObject(i).getString("address");
                 longitude =  parking_listings.getJSONObject(i).getDouble("lng");
                 price_formatted = parking_listings.getJSONObject(i).getString("price_formatted");
@@ -186,13 +189,15 @@ public class MapsActivity implements  OnMarkerClickListener {
                 parking_data.put("likes",likes);
                 parking_data.put("spots","No of Available Spots " + spots);
                 parking_data.put("distance",distance + " miles away");
+                parking_data.put("start",startDateTime);
+                parking_data.put("end",endDateTime);
 
             } catch (JSONException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng),14.0f));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng), 14.0f));
             id= mMap.addMarker(new MarkerOptions()
                             .position(new LatLng(latitude, longitude)).title("Name:" + location_name)
                             .icon(BitmapDescriptorFactory.fromBitmap(writeTextOnDrawable(icon, "$"+price)))).getId();
@@ -201,8 +206,34 @@ public class MapsActivity implements  OnMarkerClickListener {
         }
     }
 
+    public String convertUnixTimeStampToDate(long unixTime){
+
+        Date date = new Date(unixTime *1000L); // *1000 is to convert seconds to milliseconds
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm"); // the format of your date
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT-5")); // give a timezone reference for formating
+        String formattedDate = sdf.format(date);
+
+        String [] formattedDateSeparated = formattedDate.split(" ");
+        String [] formatDate = formattedDateSeparated[0].split("/");
+        String [] formatTime = formattedDateSeparated[1].split(":");
+
+
+        int day = Integer.parseInt(formatDate[0]);
+        int month = Integer.parseInt(formatDate[1]) -1 ;
+        int year  = Integer.parseInt(formatDate[2]);
+        int hour = Integer.parseInt(formatTime[0]);
+        int minute = Integer.parseInt(formatTime[1]);
+
+        String dateInString = String.format("%02d", day) + "-" + String.format("%02d", (month + 1)) + "-" + year + " "  + String.format("%02d", (hour)) + ":" + String.format("%02d", (minute));
+        return dateInString;
+    }
+
     @Override
     public boolean onMarkerClick(Marker marker) {
+        setAllFieldsToBlank();
+        ProgressBar spinner=(ProgressBar)this.activity.findViewById(R.id.progressBar);
+        spinner.bringToFront();
+        spinner.setVisibility(View.GONE);
         JSONObject parking_data;
         double latitude = 0;
         double longitude = 0;
@@ -222,6 +253,8 @@ public class MapsActivity implements  OnMarkerClickListener {
         String distance = " ";
         String spots = " ";
         String likes = " ";
+        String startDateTime =" ";
+        String endDateTime =" ";
         parking_data= markerInfoList.get(marker.getId());
         try{
             api_url = parking_data.getString("api_url");
@@ -242,6 +275,8 @@ public class MapsActivity implements  OnMarkerClickListener {
             distance =   parking_data.getString("distance");
             spots = parking_data.getString("spots");
             likes = parking_data.getString("likes");
+            startDateTime = parking_data.getString("start");
+            endDateTime = parking_data.getString("end");
 
             //Call to get API results
             GetDetailAPIResults apiResults = new GetDetailAPIResults(this.context,this.activity);
@@ -253,7 +288,7 @@ public class MapsActivity implements  OnMarkerClickListener {
         }
 
         //Set Street View Image
-        String url= "https://maps.googleapis.com/maps/api/streetview?size=200x200&location=" + latitude + "," + longitude + "&heading=0&pitch=0&key=AIzaSyABnXKSGwNY4LhUExDF48esvU4n9z_Cypc";
+        String url= "https://maps.googleapis.com/maps/api/streetview?size=200x200&location=" + latitude + "," + longitude + "&heading=0&pitch=0&key="+Google_Maps_Api_Key;
         new DownloadImageTask((ImageView) this.activity.findViewById(R.id.streetview))
                 .execute(url);
 
@@ -301,6 +336,14 @@ public class MapsActivity implements  OnMarkerClickListener {
         //Set spots
         TextView spots_field = (TextView) this.activity.findViewById (R.id.spots);
         spots_field.setText(spots);
+
+
+        //Set start/end date/time
+        TextView start_field = (TextView) this.activity.findViewById (R.id.startDateTime);
+        start_field.setText(startDateTime);
+
+        TextView end_field = (TextView) this.activity.findViewById (R.id.endDateTime);
+        end_field.setText(endDateTime);
 
 
         hiddenPanel = this.activity.findViewById(R.id.hidden_panel);
@@ -396,5 +439,58 @@ public class MapsActivity implements  OnMarkerClickListener {
         protected void onPostExecute(Bitmap result) {
             bmImage.setImageBitmap(result);
         }
+    }
+
+    public void setAllFieldsToBlank(){
+        //Set Street View Image
+
+        ImageView streetviewImage = (ImageView) this.activity.findViewById(R.id.streetview);
+        streetviewImage.setImageResource(android.R.color.transparent);
+
+        //Set Location Name
+        TextView location_name_field = (TextView) this.activity.findViewById (R.id.locationName);
+        location_name_field.setText("");
+
+        //Set Price
+        TextView price_formatted_field = (TextView) this.activity.findViewById (R.id.price);
+        price_formatted_field.setText(" ");
+
+        //Set address
+        TextView address_field = (TextView) this.activity.findViewById (R.id.address);
+        address_field.setText(" ");
+
+        //Set security
+        TextView security_field = (TextView) this.activity.findViewById (R.id.security_status);
+        security_field.setText(" ");
+
+        //Set valet
+        TextView valet_field = (TextView) this.activity.findViewById (R.id.valet_status);
+        valet_field.setText(" ");
+
+        //Set attended
+        TextView attended_field = (TextView) this.activity.findViewById (R.id.attended_status);
+        attended_field .setText(" ");
+
+        //Set mobile pass
+        TextView covered_field = (TextView) this.activity.findViewById (R.id.covered_status);
+        covered_field.setText(" ");
+
+
+        //Set covered
+        TextView mobile_pass_field = (TextView) this.activity.findViewById (R.id.mobilepass_status);
+        mobile_pass_field.setText(" ");
+
+        //Set restroom
+        TextView restroom_field = (TextView) this.activity.findViewById (R.id.restrooms_status);
+        restroom_field.setText(" ");
+
+        //Set likes
+        TextView likes_field = (TextView) this.activity.findViewById (R.id.likes_text);
+        likes_field.setText(" ");
+
+        //Set spots
+        TextView spots_field = (TextView) this.activity.findViewById (R.id.spots);
+        spots_field.setText(" ");
+
     }
 }

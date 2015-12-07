@@ -6,6 +6,7 @@
     <string name="dialog_noresults">Sorry there is no parking listing at this location</string>
     <string name="dialog_noresults_title">Error No Results</string>
     <string name="park_whiz_key">296ce162e9bb823e5c66bd85280aa208</string>
+    <string name="google_places_key">AIzaSyCjEZXOWU6WX09TxR5Nlb6f46wceV-MoJE</string>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
 </resources>
