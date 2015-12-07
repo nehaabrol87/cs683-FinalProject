@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import android.content.Context;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import org.json.JSONException;
@@ -58,7 +60,10 @@ public class GetDetailAPIResults extends  AsyncTask<String, Void, String>  {
     // onPostExecute displays the results of the AsyncTask.
     @Override
     protected void onPostExecute(String result) {
-        Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show();
+        ProgressBar spinner=(ProgressBar)this.activity.findViewById(R.id.progressBar);
+        spinner.setVisibility(View.GONE);
+
+        Toast.makeText(context, "Success getting Garage details", Toast.LENGTH_SHORT).show();
         JSONObject json = null;
         String description = " ";
         String directions = " ";
