@@ -1,7 +1,5 @@
     package com.nehaabrol.parkingpursuit;
 
-
-    import android.app.Activity;
     import android.app.AlertDialog;
     import android.app.DatePickerDialog;
     import android.app.TimePickerDialog;
@@ -75,6 +73,7 @@
 
     public class MainActivity extends AppCompatActivity implements OnClickListener, OnItemClickListener, LocationListener {
 
+        public final static String DIRECTIONS = "com.nehaabrol.parkingpursuit.DIRECTIONS";
         private String userSelectedDestination;
         private ActionBarDrawerToggle mDrawerToggle;
         private DrawerLayout mDrawerLayout;
@@ -90,7 +89,7 @@
         private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
         private static final String OUT_JSON = "/json";
         private static final String API_KEY = "AIzaSyCjEZXOWU6WX09TxR5Nlb6f46wceV-MoJE";
-        private Button btnCalendarStart, btnTimeStart, btnCalendarEnd, btnTimeEnd ,submitUpdate;
+        private Button btnCalendarStart, btnTimeStart, btnCalendarEnd, btnTimeEnd ,submitUpdate,getDirections;
         private EditText txtDateStart, txtTimeStart, txtDateEnd, txtTimeEnd;
         // Variable for storing start current date and time
         private int startYear, startMonth, startDay, startHour, startMinute;
@@ -153,6 +152,10 @@
             //Call to get API esults
             apiResults = new GetAPIResults(getBaseContext(),mapFragment, this);
 
+            //Start a new activity
+            getDirections = (Button) findViewById(R.id.getDirections);
+            getDirections.setOnClickListener(this);
+
             //Check if there is a savedInstance
             if(savedInstanceState != null && savedInstanceState.getString("parking_listings") != null ) {
                 saved = true;
@@ -188,7 +191,6 @@
             //Set current date/Time
             setDefaultStartDateTime();
             setDefaultEndDateTime();
-
 
             btnCalendarStart.setOnClickListener(this);
             btnTimeStart.setOnClickListener(this);
@@ -334,14 +336,14 @@
         }
 
         private void addDrawerItems() {
-            String[] osArray = { "Android", "iOS", "Windows", "OS X", "Linux" };
+            String[] osArray = { "About Us", "Technical" };
             mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
             mDrawerList.setAdapter(mAdapter);
 
             mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Toast.makeText(MainActivity.this, "Time for an upgrade!", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MainActivity.this, "Time for an upgrade!", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -541,6 +543,31 @@
                         hideSoftKeyboard();
                     }
                 }
+            }
+
+            if(v == getDirections) {
+                String address = "";
+                double  latitude =0;
+                double longitude = 0;
+                JSONObject parking_data = new JSONObject();
+
+                if(mapsActivity.addressOfMarkerThatWasClicked()!= null) {
+                    address = mapsActivity.addressOfMarkerThatWasClicked();
+                    latitude = mapsActivity.getLatitudeOfMarkerThatWasClicked();
+                    longitude = mapsActivity.getLongitudeOfMarkerThatWasClicked();
+
+                    System.out.println("Here" + address + latitude + longitude);
+                    try{
+                        parking_data.put("lat",latitude);
+                        parking_data.put("address", address);
+                        parking_data.put("lng", longitude);
+                    } catch(JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                Intent intent = new Intent(this, GetDirectionsActivity.class);
+                intent.putExtra(DIRECTIONS, parking_data.toString());
+                startActivity(intent);
             }
         }
 
@@ -771,6 +798,9 @@
                 catch (SecurityException e) {
                 Log.e("PERMISSION_EXCEPTION","PERMISSION_NOT_GRANTED");
                 }
+                hideSoftKeyboard();
+                autoCompView.setFocusable(false);
+                autoCompView.setFocusableInTouchMode(true);
             }
         }
 
@@ -799,16 +829,6 @@
 
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
-            // Handle action bar item clicks here. The action bar will
-            // automatically handle clicks on the Home/Up button, so long
-            // as you specify a parent activity in AndroidManifest.xml.
-            int id = item.getItemId();
-
-            //noinspection SimplifiableIfStatement
-            if (id == R.id.action_settings) {
-                return true;
-            }
-
             // Activate the navigation drawer toggle
             if (mDrawerToggle.onOptionsItemSelected(item)) {
                 return true;

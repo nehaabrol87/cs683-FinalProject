@@ -1,21 +1,12 @@
 package com.nehaabrol.parkingpursuit;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.graphics.PorterDuff;
-import android.location.Address;
-import android.location.Criteria;
-import android.location.Geocoder;
-import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
+
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -69,6 +60,10 @@ public class MapsActivity implements  OnMarkerClickListener {
     private MapFragment mapFragment;
     private  final String Google_Maps_Api_Key  = "AIzaSyDgnc1W7wxDVqY0ZMulzOhU8SdC6QXOKRM";
     private HashMap<String, JSONObject> markerInfoList = new HashMap<String, JSONObject>();
+    public String addressOfMarker;
+    public Double latitudeOfMarker;
+    public Double longitudeOfMarker;
+
 
     public MapsActivity(final Context context, MapFragment mapFragment, Activity activity) {
         this.context = context;
@@ -196,11 +191,11 @@ public class MapsActivity implements  OnMarkerClickListener {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            
+
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng), 14.0f));
             id= mMap.addMarker(new MarkerOptions()
-                            .position(new LatLng(latitude, longitude)).title("Name:" + location_name)
-                            .icon(BitmapDescriptorFactory.fromBitmap(writeTextOnDrawable(icon, "$"+price)))).getId();
+                    .position(new LatLng(latitude, longitude)).title("Name:" + location_name)
+                    .icon(BitmapDescriptorFactory.fromBitmap(writeTextOnDrawable(icon, "$"+price)))).getId();
             markerInfoList.put(id, parking_data);
             mMap.setOnMarkerClickListener(this);
         }
@@ -278,13 +273,17 @@ public class MapsActivity implements  OnMarkerClickListener {
             startDateTime = parking_data.getString("start");
             endDateTime = parking_data.getString("end");
 
+            addressOfMarker = address;
+            latitudeOfMarker = latitude;
+            longitudeOfMarker = longitude;
+
             //Call to get API results
             GetDetailAPIResults apiResults = new GetDetailAPIResults(this.context,this.activity);
             apiResults.execute(api_url+"&key="+context.getResources().getString(R.string.park_whiz_key));
         }
-         catch (JSONException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+        catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 
         //Set Street View Image
@@ -491,6 +490,18 @@ public class MapsActivity implements  OnMarkerClickListener {
         //Set spots
         TextView spots_field = (TextView) this.activity.findViewById (R.id.spots);
         spots_field.setText(" ");
+    }
+    public String  addressOfMarkerThatWasClicked(){
+        System.out.println("addressOfMarkerThatWasClicked" + addressOfMarker);
+        return addressOfMarker;
+    }
 
+    public Double getLatitudeOfMarkerThatWasClicked(){
+        System.out.println("addressOfMarkerThatWasClicked" + latitudeOfMarker);
+        return latitudeOfMarker;
+    }
+    public Double getLongitudeOfMarkerThatWasClicked(){
+        System.out.println("addressOfMarkerThatWasClicked" + longitudeOfMarker);
+        return longitudeOfMarker;
     }
 }
