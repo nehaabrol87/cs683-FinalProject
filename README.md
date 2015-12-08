@@ -2,24 +2,14 @@
 
 #WIP
 
-1.Add Null Pointer when API fails 
+1.info n help
 
-2.Add message when API returns 0
+2.Testing
 
-3.Progress spinner
+3.Spinner,save state last page
 
-4.Not picking current location due to removeUpdates
+4.On resume last page
 
-5.Add logic to get user’s permission
+5.validations n empty toasts
 
-6.Remove focus from keyboard
-
-7.fragment (Match parent error on layout height)
-
-8.Loses results when orientation is changed(Implement that)
-
-9.hidden panel add scroll
-
-10.Distance calc
-
-11.Recommendations image
+6.Debug directions
