@@ -12,9 +12,14 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.content.Intent;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,38 +30,34 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Dialog;
 import android.graphics.Color;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.Menu;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import android.widget.Button;
@@ -65,10 +66,11 @@ import android.widget.Toast;
 import android.support.v4.app.NavUtils;
 
 
+
 /**
  * Created by neha_.abrol on 12/7/15.
  */
-public class GetDirectionsActivity extends AppCompatActivity implements LocationListener,OnClickListener {
+public class GetDirectionsActivity extends AppCompatActivity implements LocationListener,OnClickListener,AdapterView.OnItemClickListener {
     GoogleMap mGoogleMap;
     ArrayList<LatLng> mMarkerPoints;
     double mLatitude=0;
@@ -87,6 +89,15 @@ public class GetDirectionsActivity extends AppCompatActivity implements Location
     private ArrayAdapter<String> mAdapter;
     private String mActivityTitle;
     private MapFragment mapFragment;
+    private LatLng origin;
+    private AutoCompleteTextView startAutocomplete,endAutocomplete;
+    private LatLng dest;
+    private static final String LOG_TAG = "Google Places Autocomplete";
+    private static final String PLACES_API_BASE = "https://maps.googleapis.com/maps/api/place";
+    private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
+    private static final String OUT_JSON = "/json";
+    private static final String API_KEY = "AIzaSyCjEZXOWU6WX09TxR5Nlb6f46wceV-MoJE";
+    private ProgressBar spinner;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -95,7 +106,7 @@ public class GetDirectionsActivity extends AppCompatActivity implements Location
 
         // Get the message from the intent
         Intent intent = getIntent();
-        String jsonString = intent.getStringExtra(MainActivity.DIRECTIONS);
+        String jsonString = intent.getStringExtra(MapsActivity.DIRECTIONS);
 
         try {
             JSONObject parking_data = new JSONObject(jsonString);
@@ -107,73 +118,77 @@ public class GetDirectionsActivity extends AppCompatActivity implements Location
 
         }
 
+        //Map defaults
+        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapDirections);
+        mGoogleMap = mapFragment.getMap();
+        mGoogleMap.clear();
+        getCurrentLocationOfUser();
+        setUpMapDefaults();
+
+        setupDrawer();
+
+        //Spinner
+        spinner=(ProgressBar)findViewById(R.id.progressBar);
+        spinner.bringToFront();
+        spinner.setVisibility(View.GONE);
+
+        //Set on click listener on done button
+        Button getDirections = (Button) findViewById(R.id.getDirections);
+        getDirections.getBackground().setColorFilter(0xFF000000, PorterDuff.Mode.MULTIPLY);
+        getDirections.setOnClickListener(this);
+
+        }
+
+    public void setUpMapDefaults() {
         // Create the text view
         TextView endLocation = (TextView) findViewById(R.id.endLocation);
         endLocation.setText(endAddress);
 
-        mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapDirections);
-        mGoogleMap = mapFragment.getMap();
-        getCurrentLocationOfUser();
+        dest = new LatLng(endtLatitude, endLongitude);
+        drawMarker(dest);
+        //Get Autocomplete textview
+        startAutocomplete = (AutoCompleteTextView) findViewById(R.id.startLocation);
+        startAutocomplete.setAdapter(new GooglePlacesAutocompleteAdapter(this, R.layout.list_item));
+        startAutocomplete.setOnItemClickListener(this);
 
-        setupDrawer();
-        addDrawerItems();
-        // Initializing
-            mMarkerPoints = new ArrayList<LatLng>();
-            // Getting reference to MapFragment of the activity_main
+        //Get Autocomplete textview
+        endAutocomplete = (AutoCompleteTextView) findViewById(R.id.endLocation);
+        endAutocomplete.setAdapter(new GooglePlacesAutocompleteAdapter(this, R.layout.list_item));
+        endAutocomplete.setOnItemClickListener(this);
 
-            //Set on click listener on done button
-            Button getDirections = (Button) findViewById(R.id.getDirections);
-            getDirections.getBackground().setColorFilter(0xFF000000, PorterDuff.Mode.MULTIPLY);
-            getDirections.setOnClickListener(this);
-
-            LatLng endPoint = new LatLng(endtLatitude, endLongitude);
-            drawMarker(endPoint);
-
-//            // Setting onclick event listener for the map
-            mGoogleMap.setOnMapClickListener(new OnMapClickListener() {
-
-                @Override
-                public void onMapClick(LatLng point) {
-
-                    // Already map contain destination location
-                    if (mMarkerPoints.size() > 1) {
-
-                        FragmentManager fm = getSupportFragmentManager();
-                        mMarkerPoints.clear();
-                        mGoogleMap.clear();
-                        LatLng startPoint = new LatLng(mLatitude, mLongitude);
-                        drawMarker(startPoint);
-                    }
-
-                    drawMarker(point);
-
-                    // Checks, whether start and end locations are captured
-                    if (mMarkerPoints.size() >= 2) {
-                        LatLng origin = mMarkerPoints.get(0);
-                        LatLng dest = mMarkerPoints.get(1);
-
-                        // Getting URL to the Google Directions API
-                        String url = getDirectionsUrl(origin, dest);
-
-                        DownloadTask downloadTask = new DownloadTask();
-
-                        // Start downloading json data from Google Directions API
-                        downloadTask.execute(url);
-                    }
-                }
-            });
-        }
-
+    }
     @Override
     public void onClick(final View v){
-        Toast.makeText(GetDirectionsActivity.this, "Start or end location cannot be empty", Toast.LENGTH_SHORT).show();
-//        // Getting URL to the Google Directions API
-//        String url = getDirectionsUrl(origin, dest);
-//
-//        DownloadTask downloadTask = new DownloadTask();
-//
-//        // Start downloading json data from Google Directions API
-//        downloadTask.execute(url);
+        if(startAddress.length() == 0 || endAddress.length()== 0){
+            Toast.makeText(GetDirectionsActivity.this, "Start or end location cannot be empty", Toast.LENGTH_SHORT).show();
+        } else {
+            mGoogleMap = mapFragment.getMap();
+            mGoogleMap.clear();
+            drawMarker(origin);
+            drawMarker(dest);
+            Button getDirections_button = (Button) findViewById(R.id.getDirections);
+            spinner.setVisibility(View.VISIBLE);
+            getDirections_button.setEnabled(false);
+            startAutocomplete.setFocusable(false);
+            startAutocomplete.setFocusableInTouchMode(true);
+            endAutocomplete.setFocusable(false);
+            endAutocomplete.setFocusableInTouchMode(true);
+            getDirections_button.getBackground().setColorFilter(0xFFFFFFFF, PorterDuff.Mode.MULTIPLY);
+            hideSoftKeyboard();
+            // Getting URL to the Google Directions API
+            String url = getDirectionsUrl(origin, dest);
+            DownloadTask downloadTask = new DownloadTask();
+            downloadTask.execute(url);
+        }
+    }
+
+    public void hideSoftKeyboard() {
+        //Hide Soft keyboard
+        InputMethodManager imm = (InputMethodManager)
+                getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(
+                startAutocomplete.getWindowToken(), 0);
+
     }
 
     public void getCurrentLocationOfUser(){
@@ -250,7 +265,7 @@ public class GetDirectionsActivity extends AppCompatActivity implements Location
             locationUpdated = true;
             startLatitude= location.getLatitude();
             startLongitude = location.getLongitude();
-            LatLng latLng = new LatLng(startLatitude, startLongitude);
+            origin = new LatLng(startLatitude, startLongitude);
             if (Geocoder.isPresent()) {
                 Geocoder gcd = new Geocoder(getApplicationContext(), Locale.getDefault());
                 try {
@@ -264,10 +279,8 @@ public class GetDirectionsActivity extends AppCompatActivity implements Location
             startLocation.setText(startAddress);
 
             //Show the current location on Google Map
-
-            System.out.println("mGoogleMap" + mGoogleMap);
-            mGoogleMap.addMarker(new MarkerOptions().position(latLng).title("Current Location:" + startAddress));
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
+            mGoogleMap.addMarker(new MarkerOptions().position(origin).title("Current Location:" + startAddress));
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(origin, 15));
         }
     }
 
@@ -280,14 +293,18 @@ public class GetDirectionsActivity extends AppCompatActivity implements Location
 
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
 
-            /** Called when a drawer has settled in a completely open state. */
+            /**
+             * Called when a drawer has settled in a completely open state.
+             */
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
                 getSupportActionBar().setTitle("Navigation!");
                 invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
             }
 
-            /** Called when a drawer has settled in a completely closed state. */
+            /**
+             * Called when a drawer has settled in a completely closed state.
+             */
             public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
                 getSupportActionBar().setTitle(mActivityTitle);
@@ -297,19 +314,6 @@ public class GetDirectionsActivity extends AppCompatActivity implements Location
 
         mDrawerToggle.setDrawerIndicatorEnabled(true);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-    }
-
-    private void addDrawerItems() {
-        String[] osArray = { "About Us", "Technical" };
-        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
-        mDrawerList.setAdapter(mAdapter);
-
-        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //Toast.makeText(MainActivity.this, "Time for an upgrade!", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     @Override
@@ -503,6 +507,8 @@ private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<St
         ArrayList<LatLng> points = null;
         PolylineOptions lineOptions = null;
 
+        System.out.println("Directions in post execute" +result);
+
         // Traversing through all the routes
         for(int i=0;i<result.size();i++){
             points = new ArrayList<LatLng>();
@@ -518,44 +524,144 @@ private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<St
                 double lat = Double.parseDouble(point.get("lat"));
                 double lng = Double.parseDouble(point.get("lng"));
                 LatLng position = new LatLng(lat, lng);
-
                 points.add(position);
             }
 
             // Adding all the points in the route to LineOptions
             lineOptions.addAll(points);
-            lineOptions.width(2);
+            lineOptions.width(8);
             lineOptions.color(Color.RED);
-
         }
-
         // Drawing polyline in the Google Map for the i-th route
+        animateCamera();
+        spinner.setVisibility(View.GONE);
+        Button getDirections_button = (Button) findViewById(R.id.getDirections);
+        getDirections_button.setEnabled(false);
+        getDirections_button.getBackground().setColorFilter(0xFF000000, PorterDuff.Mode.MULTIPLY);
         mGoogleMap.addPolyline(lineOptions);
     }
 }
-
+    private void animateCamera(){
+        if(origin !=null && dest !=null){
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            builder.include(origin);
+            builder.include(dest);
+            LatLngBounds bounds = builder.build();
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 20));
+        }
+    }
 
     private void drawMarker(LatLng point){
-        mMarkerPoints.add(point);
-
         // Creating MarkerOptions
-        MarkerOptions options = new MarkerOptions();
+        mGoogleMap.addMarker(new MarkerOptions()
+                .position(point)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                .title("End Location:" + endAddress));
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 15));
+    }
 
-        // Setting the position of the marker
-        options.position(point);
+    public void onItemClick(AdapterView adapterView, View view, int position, long id) {
+        System.out.println("View is" +view);
+    }
 
-        /**
-         * For the start location, the color of marker is GREEN and
-         * for the end location, the color of marker is RED.
-         */
-        if(mMarkerPoints.size()==1){
-            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-        }else if(mMarkerPoints.size()==2){
-            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+    public static  ArrayList autocomplete(String input) {
+        ArrayList resultList = null;
+
+        HttpURLConnection conn = null;
+        StringBuilder jsonResults = new StringBuilder();
+        try {
+            StringBuilder sb = new StringBuilder(PLACES_API_BASE + TYPE_AUTOCOMPLETE + OUT_JSON);
+            sb.append("?key=" + API_KEY);
+            sb.append("&components=country:us");
+            sb.append("&input=" + URLEncoder.encode(input, "utf8"));
+
+            URL url = new URL(sb.toString());
+            conn = (HttpURLConnection) url.openConnection();
+            InputStreamReader in = new InputStreamReader(conn.getInputStream());
+
+            // Load the results into a StringBuilder
+            int read;
+            char[] buff = new char[1024];
+            while ((read = in.read(buff)) != -1) {
+                jsonResults.append(buff, 0, read);
+            }
+        } catch (MalformedURLException e) {
+            Log.e(LOG_TAG, "Error processing Places API URL", e);
+            return resultList;
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error connecting to Places API", e);
+            return resultList;
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
 
-        // Add new marker to the Google Map Android API V2
-        mGoogleMap.addMarker(options);
+        try {
+            System.out.println("Places API "+jsonResults);
+            // Create a JSON object hierarchy from the results
+            JSONObject jsonObj = new JSONObject(jsonResults.toString());
+            JSONArray predsJsonArray = jsonObj.getJSONArray("predictions");
+
+            // Extract the Place descriptions from the results
+            resultList = new ArrayList(predsJsonArray.length());
+            for (int i = 0; i < predsJsonArray.length(); i++) {
+                System.out.println(predsJsonArray.getJSONObject(i).getString("description"));
+                System.out.println("============================================================");
+                resultList.add(predsJsonArray.getJSONObject(i).getString("description"));
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Cannot process JSON results", e);
+        }
+
+        return resultList;
+    }
+
+    class GooglePlacesAutocompleteAdapter extends ArrayAdapter<String> implements Filterable {
+        private ArrayList<String> resultList;
+
+        public GooglePlacesAutocompleteAdapter(Context context, int textViewResourceId) {
+            super(context, textViewResourceId);
+        }
+
+        @Override
+        public int getCount() {
+            return resultList.size();
+        }
+
+        @Override
+        public String getItem(int index) {
+            return resultList.get(index);
+        }
+
+        @Override
+        public Filter getFilter() {
+            Filter filter = new Filter() {
+                @Override
+                protected FilterResults performFiltering(CharSequence constraint) {
+                    FilterResults filterResults = new FilterResults();
+                    if (constraint != null) {
+                        // Retrieve the autocomplete results.
+                        resultList = autocomplete(constraint.toString());
+
+                        // Assign the data to the FilterResults
+                        filterResults.values = resultList;
+                        filterResults.count = resultList.size();
+                    }
+                    return filterResults;
+                }
+
+                @Override
+                protected void publishResults(CharSequence constraint, FilterResults results) {
+                    if (results != null && results.count > 0) {
+                        notifyDataSetChanged();
+                    } else {
+                        notifyDataSetInvalidated();
+                    }
+                }
+            };
+            return filter;
+        }
     }
 }
 
