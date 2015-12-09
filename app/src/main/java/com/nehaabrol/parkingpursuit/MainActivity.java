@@ -73,7 +73,6 @@
 
     public class MainActivity extends AppCompatActivity implements OnClickListener, OnItemClickListener, LocationListener {
 
-        public final static String DIRECTIONS = "com.nehaabrol.parkingpursuit.DIRECTIONS";
         private String userSelectedDestination;
         private ActionBarDrawerToggle mDrawerToggle;
         private DrawerLayout mDrawerLayout;
@@ -89,7 +88,7 @@
         private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
         private static final String OUT_JSON = "/json";
         private static final String API_KEY = "AIzaSyCjEZXOWU6WX09TxR5Nlb6f46wceV-MoJE";
-        private Button btnCalendarStart, btnTimeStart, btnCalendarEnd, btnTimeEnd ,submitUpdate,getDirections;
+        private Button btnCalendarStart, btnTimeStart, btnCalendarEnd, btnTimeEnd ,submitUpdate;
         private EditText txtDateStart, txtTimeStart, txtDateEnd, txtTimeEnd;
         // Variable for storing start current date and time
         private int startYear, startMonth, startDay, startHour, startMinute;
@@ -151,10 +150,6 @@
 
             //Call to get API esults
             apiResults = new GetAPIResults(getBaseContext(),mapFragment, this);
-
-            //Start a new activity
-            getDirections = (Button) findViewById(R.id.getDirections);
-            getDirections.setOnClickListener(this);
 
             //Check if there is a savedInstance
             if(savedInstanceState != null && savedInstanceState.getString("parking_listings") != null ) {
@@ -544,31 +539,6 @@
                     }
                 }
             }
-
-            if(v == getDirections) {
-                String address = "";
-                double  latitude =0;
-                double longitude = 0;
-                JSONObject parking_data = new JSONObject();
-
-                if(mapsActivity.addressOfMarkerThatWasClicked()!= null) {
-                    address = mapsActivity.addressOfMarkerThatWasClicked();
-                    latitude = mapsActivity.getLatitudeOfMarkerThatWasClicked();
-                    longitude = mapsActivity.getLongitudeOfMarkerThatWasClicked();
-
-                    System.out.println("Here" + address + latitude + longitude);
-                    try{
-                        parking_data.put("lat",latitude);
-                        parking_data.put("address", address);
-                        parking_data.put("lng", longitude);
-                    } catch(JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-                Intent intent = new Intent(this, GetDirectionsActivity.class);
-                intent.putExtra(DIRECTIONS, parking_data.toString());
-                startActivity(intent);
-            }
         }
 
         public Date convertStringToDate(int day,int month,int year,int hour,int minute) {
@@ -835,6 +805,11 @@
             }
 
             return super.onOptionsItemSelected(item);
+        }
+
+        @Override
+        public void onBackPressed() {
+            android.os.Process.killProcess(android.os.Process.myPid());
         }
     }
 

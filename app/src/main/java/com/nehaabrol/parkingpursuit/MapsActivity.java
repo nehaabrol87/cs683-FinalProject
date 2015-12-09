@@ -2,10 +2,13 @@ package com.nehaabrol.parkingpursuit;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
+import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -37,12 +40,12 @@ import android.graphics.Paint.Align;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.TimeZone;
+import android.view.View.OnClickListener;
 
 import android.widget.ImageView;
 import android.util.Log;
@@ -51,9 +54,10 @@ import android.util.Log;
 /**
  * Created by neha_.abrol on 11/7/15.
  */
-public class MapsActivity implements  OnMarkerClickListener {
+public class MapsActivity implements  OnMarkerClickListener,OnClickListener {
 
     private static GoogleMap  mMap;
+    public final static String DIRECTIONS = "com.nehaabrol.parkingpursuit.DIRECTIONS";
     private  Context context;
     private View hiddenPanel;
     private Activity activity;
@@ -63,12 +67,16 @@ public class MapsActivity implements  OnMarkerClickListener {
     public String addressOfMarker;
     public Double latitudeOfMarker;
     public Double longitudeOfMarker;
+    public Button getDirections;
 
 
     public MapsActivity(final Context context, MapFragment mapFragment, Activity activity) {
         this.context = context;
         this.activity = activity;
         this.mapFragment = mapFragment;
+        //Start a new activity
+        getDirections = (Button) this.activity.findViewById(R.id.getDirections);
+        getDirections.setOnClickListener(this);
     }
 
 
@@ -276,6 +284,7 @@ public class MapsActivity implements  OnMarkerClickListener {
             addressOfMarker = address;
             latitudeOfMarker = latitude;
             longitudeOfMarker = longitude;
+
 
             //Call to get API results
             GetDetailAPIResults apiResults = new GetDetailAPIResults(this.context,this.activity);
@@ -491,17 +500,21 @@ public class MapsActivity implements  OnMarkerClickListener {
         TextView spots_field = (TextView) this.activity.findViewById (R.id.spots);
         spots_field.setText(" ");
     }
-    public String  addressOfMarkerThatWasClicked(){
-        System.out.println("addressOfMarkerThatWasClicked" + addressOfMarker);
-        return addressOfMarker;
-    }
 
-    public Double getLatitudeOfMarkerThatWasClicked(){
-        System.out.println("addressOfMarkerThatWasClicked" + latitudeOfMarker);
-        return latitudeOfMarker;
+    @Override
+    public void onClick(final View v) {
+        JSONObject parking_data = new JSONObject();
+        if(v == getDirections) {
+                try{
+                    parking_data.put("lat",latitudeOfMarker);
+                    parking_data.put("address", addressOfMarker);
+                    parking_data.put("lng", longitudeOfMarker);
+                } catch(JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            Intent intent = new Intent(this.activity, GetDirectionsActivity.class);
+            intent.putExtra(DIRECTIONS, parking_data.toString());
+            this.activity.startActivity(intent);
+        }
     }
-    public Double getLongitudeOfMarkerThatWasClicked(){
-        System.out.println("addressOfMarkerThatWasClicked" + longitudeOfMarker);
-        return longitudeOfMarker;
-    }
-}
