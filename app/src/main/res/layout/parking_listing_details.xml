@@ -14,21 +14,15 @@
         android:background="#A8A8A8"
         android:gravity="left">
         <Button
-            android:layout_height="wrap_content"
-            android:layout_width="50dp"
             android:id="@+id/back"
-            android:background="@drawable/back"
-            android:onClick="slideUpDown" />
-        <TextView
-            android:id="@+id/headerBack"
-            android:layout_toRightOf="@+id/back"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Back to Home"
-            android:layout_margin="5dp"
+            android:layout_width="match_parent"
             android:textColor="#fff"
+            android:text="Click to hide this view"
             android:textSize="25sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:background="#33B5E5"
+            android:onClick="slideUpDown" />
     </RelativeLayout>
 
     <RelativeLayout

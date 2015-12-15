@@ -87,7 +87,7 @@
         private static final String PLACES_API_BASE = "https://maps.googleapis.com/maps/api/place";
         private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
         private static final String OUT_JSON = "/json";
-        private static final String API_KEY = "AIzaSyCjEZXOWU6WX09TxR5Nlb6f46wceV-MoJE";
+        private static final String API_KEY = "AIzaSyALXjBvhqwy3xqlDY4QWzIElp3So132dtw";
         private Button btnCalendarStart, btnTimeStart, btnCalendarEnd, btnTimeEnd ,submitUpdate;
         private EditText txtDateStart, txtTimeStart, txtDateEnd, txtTimeEnd;
         // Variable for storing start current date and time
@@ -643,6 +643,7 @@
                 if (conn != null) {
                     conn.disconnect();
                 }
+                System.out.println("Places Api "+ resultList);
             }
 
             try {
@@ -809,6 +810,7 @@
 
         @Override
         public void onBackPressed() {
+            finish();
             android.os.Process.killProcess(android.os.Process.myPid());
         }
     }

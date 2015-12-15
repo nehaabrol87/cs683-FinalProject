@@ -281,7 +281,7 @@ public class MapsActivity implements  OnMarkerClickListener,OnClickListener {
             startDateTime = parking_data.getString("start");
             endDateTime = parking_data.getString("end");
 
-            addressOfMarker = address;
+            addressOfMarker = address + "," +city +","+state+","+"United States";
             latitudeOfMarker = latitude;
             longitudeOfMarker = longitude;
 
