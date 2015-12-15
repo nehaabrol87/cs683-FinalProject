@@ -1,0 +1,66 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:background="@android:color/white"
+    android:visibility="gone">
+
+    <RelativeLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:gravity="left">
+        <Button
+            android:id="@+id/back"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:textColor="#fff"
+            android:text="Click to hide this view"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:background="#33B5E5"
+            android:onClick="slideUpDownDirections" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/directionHeading"
+        android:layout_below="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center">
+        <TextView
+            android:id="@+id/directionsHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Detailed Directions"
+            android:layout_margin="5dp"
+            android:textColor="#000000"
+            android:textSize="25sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <HorizontalScrollView
+        android:id="@+id/hscrll1"
+        android:layout_below="@+id/directionHeading"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+
+        <RelativeLayout
+            android:id="@+id/RelativeLayout1"
+            android:layout_width="match_parent"
+            android:layout_gravity="center"
+            android:layout_height="fill_parent"
+            android:orientation="vertical" >
+
+            <TableLayout
+                android:id="@+id/table_main"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true" >
+            </TableLayout>
+        </RelativeLayout>
+    </HorizontalScrollView>
+</RelativeLayout>
