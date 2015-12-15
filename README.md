@@ -1,15 +1,5 @@
-# cs683-FinalProject
+# cs683-FinalProject - An android application
 
-#WIP
+Parkingpursuit.com uses the Park Whiz API to return parking related data for a US  location and look for parking garages with  multiple filters example Attended parking, indoor parking, parking with a restroom etc .Prices vary as dates and times are changed.
 
-1.info n help
 
-2.Testing
-
-3.Spinner,save state last page
-
-4.On resume last page
-
-5.validations n empty toasts
-
-6.Debug directions
